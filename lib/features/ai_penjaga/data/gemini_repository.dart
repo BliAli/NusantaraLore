@@ -16,7 +16,7 @@ Jangan pernah keluar dari karakter sebagai Ki Dalang.
 
   GenerativeModel get model {
     _model ??= GenerativeModel(
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       apiKey: dotenv.env['GEMINI_API_KEY'] ?? '',
       systemInstruction: Content.system(_systemPrompt),
     );
@@ -41,7 +41,7 @@ Jangan pernah keluar dari karakter sebagai Ki Dalang.
 
       return responseText;
     } catch (e) {
-      return 'Maaf, terjadi kesalahan: $e';
+      return 'Maaf, terjadi kesalahan: $e'; 
     }
   }
 

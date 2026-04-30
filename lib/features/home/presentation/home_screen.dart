@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/database/sqlite_service.dart';
+import '../../../core/utils/location_utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,16 +26,38 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadData() async {
     try {
-      final budaya = await SqliteService.query(
-        'budaya',
-        limit: 10,
-        orderBy: 'created_at DESC',
-      );
-      if (mounted) {
-        setState(() {
-          _nearbyBudaya = budaya;
-          _isLoading = false;
-        });
+      final allBudaya = await SqliteService.query('budaya');
+      final pos = await LocationUtils.getCurrentPosition();
+
+      if (pos != null) {
+        final withDistance = allBudaya.where((b) {
+          return b['lat'] != null && b['lng'] != null;
+        }).map((b) {
+          final distance = LocationUtils.haversineDistance(
+            pos.latitude,
+            pos.longitude,
+            (b['lat'] as num).toDouble(),
+            (b['lng'] as num).toDouble(),
+          );
+          return {...b, 'distance': distance};
+        }).toList();
+
+        withDistance.sort((a, b) =>
+            (a['distance'] as double).compareTo(b['distance'] as double));
+
+        if (mounted) {
+          setState(() {
+            _nearbyBudaya = withDistance.take(10).toList();
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _nearbyBudaya = allBudaya.take(10).toList();
+            _isLoading = false;
+          });
+        }
       }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
@@ -186,6 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBudayaCard(Map<String, dynamic> budaya) {
+    final distance = budaya['distance'] as double?;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
@@ -203,7 +227,11 @@ class _HomeScreenState extends State<HomeScreen> {
           budaya['nama'] ?? '',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text(budaya['provinsi'] ?? ''),
+        subtitle: Text(
+          distance != null
+              ? '${budaya['provinsi'] ?? ''} • ${LocationUtils.formatDistance(distance)}'
+              : budaya['provinsi'] ?? '',
+        ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () =>
             context.go(AppRoutes.budayaDetailPath(budaya['id'] ?? '')),

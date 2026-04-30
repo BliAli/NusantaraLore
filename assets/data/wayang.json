@@ -1,0 +1,100 @@
+{
+  "wayang": [
+    {
+      "id": "WYG001",
+      "nama": "Arjuna",
+      "deskripsi": "Ksatria pandawa ketiga, ahli memanah. Dikenal sebagai sosok tampan, tenang, dan bijaksana.",
+      "asal": "Jawa",
+      "jenis": "Wayang Kulit Purwa",
+      "karakter": "protagonis"
+    },
+    {
+      "id": "WYG002",
+      "nama": "Bima",
+      "deskripsi": "Pandawa kedua, memiliki kekuatan luar biasa. Senjatanya adalah Gada dan kuku Pancanaka.",
+      "asal": "Jawa",
+      "jenis": "Wayang Kulit Purwa",
+      "karakter": "protagonis"
+    },
+    {
+      "id": "WYG003",
+      "nama": "Gatotkaca",
+      "deskripsi": "Putra Bima yang bisa terbang. Memiliki otot kawat tulang besi. Gugur sebagai ksatria di Bharatayudha.",
+      "asal": "Jawa",
+      "jenis": "Wayang Kulit Purwa",
+      "karakter": "protagonis"
+    },
+    {
+      "id": "WYG004",
+      "nama": "Semar",
+      "deskripsi": "Punakawan utama, dewa yang menyamar. Penasihat bijaksana bagi para Pandawa.",
+      "asal": "Jawa",
+      "jenis": "Wayang Kulit Purwa",
+      "karakter": "punakawan"
+    },
+    {
+      "id": "WYG005",
+      "nama": "Petruk",
+      "deskripsi": "Punakawan bertubuh tinggi kurus. Dikenal suka bercanda dan menghibur.",
+      "asal": "Jawa",
+      "jenis": "Wayang Kulit Purwa",
+      "karakter": "punakawan"
+    },
+    {
+      "id": "WYG006",
+      "nama": "Gareng",
+      "deskripsi": "Punakawan bertangan dan kaki bengkok. Meski fisiknya cacat, ia sangat setia.",
+      "asal": "Jawa",
+      "jenis": "Wayang Kulit Purwa",
+      "karakter": "punakawan"
+    },
+    {
+      "id": "WYG007",
+      "nama": "Bagong",
+      "deskripsi": "Punakawan paling muda, bertubuh bulat. Polos, lucu, dan sering membuat orang tertawa.",
+      "asal": "Jawa",
+      "jenis": "Wayang Kulit Purwa",
+      "karakter": "punakawan"
+    },
+    {
+      "id": "WYG008",
+      "nama": "Yudhistira",
+      "deskripsi": "Pandawa sulung, raja Amarta. Sangat jujur dan tidak pernah berbohong.",
+      "asal": "Jawa",
+      "jenis": "Wayang Kulit Purwa",
+      "karakter": "protagonis"
+    },
+    {
+      "id": "WYG009",
+      "nama": "Nakula",
+      "deskripsi": "Pandawa kembar keempat. Ahli dalam ilmu pengobatan dan perawatan kuda.",
+      "asal": "Jawa",
+      "jenis": "Wayang Kulit Purwa",
+      "karakter": "protagonis"
+    },
+    {
+      "id": "WYG010",
+      "nama": "Sadewa",
+      "deskripsi": "Pandawa kembar kelima. Ahli perbintangan dan ilmu spiritual.",
+      "asal": "Jawa",
+      "jenis": "Wayang Kulit Purwa",
+      "karakter": "protagonis"
+    },
+    {
+      "id": "WYG011",
+      "nama": "Duryudana",
+      "deskripsi": "Kurawa sulung, raja Hastinapura. Ambisius dan menjadi musuh utama Pandawa.",
+      "asal": "Jawa",
+      "jenis": "Wayang Kulit Purwa",
+      "karakter": "antagonis"
+    },
+    {
+      "id": "WYG012",
+      "nama": "Kresna",
+      "deskripsi": "Titisan Wisnu, raja Dwarawati. Penasihat utama Pandawa dalam Bharatayudha.",
+      "asal": "Jawa",
+      "jenis": "Wayang Kulit Purwa",
+      "karakter": "protagonis"
+    }
+  ]
+}

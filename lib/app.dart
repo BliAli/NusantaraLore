@@ -7,6 +7,8 @@ import 'core/constants/app_routes.dart';
 import 'core/constants/app_strings.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/register_screen.dart';
+import 'features/auth/presentation/splash_screen.dart';
+import 'features/auth/presentation/biometric_screen.dart';
 import 'features/home/presentation/home_screen.dart';
 import 'features/explore/presentation/explore_screen.dart';
 import 'features/explore/presentation/budaya_detail_screen.dart';
@@ -26,8 +28,12 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: AppRoutes.login,
+    initialLocation: AppRoutes.splash,
     routes: [
+      GoRoute(
+        path: AppRoutes.splash,
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(
         path: AppRoutes.login,
         builder: (context, state) => const LoginScreen(),
@@ -35,6 +41,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.register,
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.biometric,
+        builder: (context, state) => const BiometricScreen(),
       ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,

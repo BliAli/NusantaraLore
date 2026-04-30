@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:local_auth/local_auth.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
@@ -61,7 +62,13 @@ class _LoginScreenState extends State<LoginScreen> {
       await SessionManager.createSession(username, username);
 
       if (mounted) {
-        context.go(AppRoutes.home);
+        final alreadyEnabled = await SessionManager.isBiometricEnabled();
+        if (!mounted) return;
+        if (!alreadyEnabled) {
+          await _offerBiometric();
+        } else {
+          context.go(AppRoutes.home);
+        }
       }
     } catch (e) {
       _showError('Terjadi kesalahan: $e');
@@ -75,6 +82,122 @@ class _LoginScreenState extends State<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: kColorError),
     );
+  }
+
+  Future<void> _offerBiometric() async {
+    final localAuth = LocalAuthentication();
+    final canCheck = await localAuth.canCheckBiometrics;
+    final isSupported = await localAuth.isDeviceSupported();
+
+    if (!canCheck || !isSupported) {
+      if (mounted) context.go(AppRoutes.home);
+      return;
+    }
+
+    if (!mounted) return;
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Login Biometrik'),
+        content: const Text(
+          'Aktifkan sidik jari / wajah untuk login cepat di lain waktu?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Nanti Saja'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Aktifkan'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && mounted) {
+      final authenticated = await localAuth.authenticate(
+        localizedReason: 'Verifikasi untuk mengaktifkan biometrik',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: true,
+        ),
+      );
+
+      if (authenticated && mounted) {
+        await _setupPin();
+        await SessionManager.setBiometricEnabled(true);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Login biometrik berhasil diaktifkan!'),
+              backgroundColor: kColorAccent,
+            ),
+          );
+        }
+      }
+    }
+
+    if (mounted) context.go(AppRoutes.home);
+  }
+
+  Future<void> _setupPin() async {
+    final pinController = TextEditingController();
+    String? error;
+
+    final pin = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Buat PIN Cadangan'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('PIN 6 digit digunakan jika biometrik gagal.'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: pinController,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                obscureText: true,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 24, letterSpacing: 8),
+                decoration: InputDecoration(
+                  counterText: '',
+                  errorText: error,
+                  hintText: '------',
+                ),
+                onChanged: (_) {
+                  if (error != null) setDialogState(() => error = null);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                if (pinController.text.length != 6) {
+                  setDialogState(() => error = 'PIN harus 6 digit');
+                  return;
+                }
+                Navigator.pop(ctx, pinController.text);
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    pinController.dispose();
+
+    if (pin != null) {
+      final hashedPin = EncryptionService.hashPassword(pin, 'pin_salt');
+      await SessionManager.storePin(hashedPin);
+    }
   }
 
   @override

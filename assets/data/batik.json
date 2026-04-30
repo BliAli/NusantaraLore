@@ -1,0 +1,60 @@
+{
+  "batik": [
+    {
+      "id": "BTK001",
+      "nama": "Batik Parang",
+      "asal": "Yogyakarta",
+      "deskripsi": "Motif diagonal berbentuk huruf S, melambangkan kekuatan dan keberanian. Dulunya hanya dipakai keluarga keraton.",
+      "makna": "Kekuasaan, keberanian, perjuangan tak pernah putus"
+    },
+    {
+      "id": "BTK002",
+      "nama": "Batik Kawung",
+      "asal": "Yogyakarta",
+      "deskripsi": "Motif berbentuk bulatan lonjong mirip buah aren. Melambangkan kesucian dan keadilan.",
+      "makna": "Kesucian, keadilan, harapan"
+    },
+    {
+      "id": "BTK003",
+      "nama": "Batik Mega Mendung",
+      "asal": "Cirebon",
+      "deskripsi": "Motif awan dengan gradasi warna biru. Melambangkan kesabaran dan ketenangan.",
+      "makna": "Kesabaran, ketenangan, pembawa hujan"
+    },
+    {
+      "id": "BTK004",
+      "nama": "Batik Truntum",
+      "asal": "Surakarta",
+      "deskripsi": "Motif bunga kecil bertaburan. Diciptakan oleh permaisuri Pakubuwono III sebagai simbol cinta.",
+      "makna": "Cinta yang tumbuh kembali, kesetiaan"
+    },
+    {
+      "id": "BTK005",
+      "nama": "Batik Sido Mukti",
+      "asal": "Surakarta",
+      "deskripsi": "Motif yang sering dipakai pengantin Jawa. Sido berarti jadi, mukti berarti sejahtera.",
+      "makna": "Kemakmuran, kesejahteraan, kebahagiaan"
+    },
+    {
+      "id": "BTK006",
+      "nama": "Batik Lasem",
+      "asal": "Rembang",
+      "deskripsi": "Batik dengan pengaruh budaya Tionghoa. Khas dengan warna merah darah ayam.",
+      "makna": "Akulturasi budaya, keberanian"
+    },
+    {
+      "id": "BTK007",
+      "nama": "Batik Pekalongan",
+      "asal": "Pekalongan",
+      "deskripsi": "Batik dengan motif flora dan fauna yang dinamis. Dipengaruhi budaya pesisir.",
+      "makna": "Keragaman, kreativitas"
+    },
+    {
+      "id": "BTK008",
+      "nama": "Batik Sidomukti",
+      "asal": "Yogyakarta",
+      "deskripsi": "Motif penuh yang menggambarkan kehidupan sempurna. Biasa dipakai saat upacara adat.",
+      "makna": "Kehidupan yang sempurna dan sejahtera"
+    }
+  ]
+}

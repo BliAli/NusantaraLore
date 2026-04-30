@@ -1,0 +1,84 @@
+{
+  "budaya": [
+    {
+      "id": "BDY001",
+      "nama": "Gamelan Jawa",
+      "provinsi": "DI Yogyakarta",
+      "kategori": "seni",
+      "deskripsi": "Ansambel musik tradisional Jawa yang terdiri dari berbagai instrumen perkusi, seruling, dan vokal.",
+      "koordinat": {"lat": -7.797, "lng": 110.365}
+    },
+    {
+      "id": "BDY002",
+      "nama": "Angklung",
+      "provinsi": "Jawa Barat",
+      "kategori": "seni",
+      "deskripsi": "Alat musik bambu khas Sunda yang dimainkan dengan cara digoyangkan. Diakui UNESCO.",
+      "koordinat": {"lat": -6.902, "lng": 107.619}
+    },
+    {
+      "id": "BDY003",
+      "nama": "Songket Palembang",
+      "provinsi": "Sumatera Selatan",
+      "kategori": "artefak",
+      "deskripsi": "Kain tenun tradisional Palembang dengan benang emas atau perak yang menggambarkan kemewahan.",
+      "koordinat": {"lat": -2.976, "lng": 104.775}
+    },
+    {
+      "id": "BDY004",
+      "nama": "Upacara Ngaben",
+      "provinsi": "Bali",
+      "kategori": "tradisi",
+      "deskripsi": "Upacara kremasi dalam agama Hindu Bali untuk mengembalikan roh ke alam semesta.",
+      "koordinat": {"lat": -8.409, "lng": 115.189}
+    },
+    {
+      "id": "BDY005",
+      "nama": "Tari Pendet",
+      "provinsi": "Bali",
+      "kategori": "seni",
+      "deskripsi": "Tarian penyambutan khas Bali yang awalnya merupakan tarian sakral di pura.",
+      "koordinat": {"lat": -8.506, "lng": 115.262}
+    },
+    {
+      "id": "BDY006",
+      "nama": "Sasando",
+      "provinsi": "Nusa Tenggara Timur",
+      "kategori": "seni",
+      "deskripsi": "Alat musik petik tradisional dari Pulau Rote yang terbuat dari daun lontar.",
+      "koordinat": {"lat": -10.173, "lng": 123.604}
+    },
+    {
+      "id": "BDY007",
+      "nama": "Tari Tor-Tor",
+      "provinsi": "Sumatera Utara",
+      "kategori": "seni",
+      "deskripsi": "Tarian adat Batak yang dilakukan dalam upacara adat dan keagamaan.",
+      "koordinat": {"lat": 2.115, "lng": 99.545}
+    },
+    {
+      "id": "BDY008",
+      "nama": "Reog Ponorogo",
+      "provinsi": "Jawa Timur",
+      "kategori": "seni",
+      "deskripsi": "Seni pertunjukan tradisional dengan topeng kepala singa dan bulu merak yang bisa mencapai 50 kg.",
+      "koordinat": {"lat": -7.865, "lng": 111.460}
+    },
+    {
+      "id": "BDY009",
+      "nama": "Tenun Ikat Sumba",
+      "provinsi": "Nusa Tenggara Timur",
+      "kategori": "artefak",
+      "deskripsi": "Kain tenun ikat khas Sumba dengan motif figuratif yang menggambarkan mitologi setempat.",
+      "koordinat": {"lat": -9.654, "lng": 120.264}
+    },
+    {
+      "id": "BDY010",
+      "nama": "Karapan Sapi",
+      "provinsi": "Jawa Timur",
+      "kategori": "tradisi",
+      "deskripsi": "Balapan sapi tradisional Madura yang diadakan setelah musim panen.",
+      "koordinat": {"lat": -7.048, "lng": 113.854}
+    }
+  ]
+}

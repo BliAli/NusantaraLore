@@ -1,13 +1,11 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/database/hive_service.dart';
+import '../../../core/database/sqlite_service.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -18,15 +16,13 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final _searchController = TextEditingController();
-  List<dynamic> _allData = [];
-  List<dynamic> _results = [];
+  List<Map<String, dynamic>> _results = [];
   List<String> _searchHistory = [];
-  bool _isLoading = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
     _loadHistory();
   }
 
@@ -34,18 +30,6 @@ class _SearchScreenState extends State<SearchScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadData() async {
-    try {
-      final jsonString =
-          await rootBundle.loadString('assets/data/legenda.json');
-      final data = json.decode(jsonString);
-      _allData = data['legenda'] as List<dynamic>? ?? [];
-      if (mounted) setState(() => _isLoading = false);
-    } catch (_) {
-      if (mounted) setState(() => _isLoading = false);
-    }
   }
 
   void _loadHistory() {
@@ -65,36 +49,22 @@ class _SearchScreenState extends State<SearchScreen> {
     await HiveService.searchHistory.put('history', _searchHistory);
   }
 
-  void _search(String query) {
+  Future<void> _search(String query) async {
     if (query.trim().isEmpty) {
       setState(() => _results = []);
       return;
     }
 
+    setState(() => _isLoading = true);
     _saveHistory(query.trim());
 
-    final q = query.toLowerCase();
-    setState(() {
-      _results = _allData.where((item) {
-        final judul = (item['judul'] ?? item['nama'] ?? '').toString().toLowerCase();
-        final asal = (item['asal'] ?? item['provinsi'] ?? '').toString().toLowerCase();
-        final ringkasan = (item['ringkasan'] ?? '').toString().toLowerCase();
-        final tags = (item['tags'] as List<dynamic>?)
-                ?.map((t) => t.toString().toLowerCase())
-                .toList() ??
-            [];
-        final tokoh = (item['tokoh'] as List<dynamic>?)
-                ?.map((t) => t.toString().toLowerCase())
-                .toList() ??
-            [];
-
-        return judul.contains(q) ||
-            asal.contains(q) ||
-            ringkasan.contains(q) ||
-            tags.any((t) => t.contains(q)) ||
-            tokoh.any((t) => t.contains(q));
-      }).toList();
-    });
+    final rows = await SqliteService.search(query.trim());
+    if (mounted) {
+      setState(() {
+        _results = rows;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -184,7 +154,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildResults() {
-    final grouped = <String, List<dynamic>>{};
+    final grouped = <String, List<Map<String, dynamic>>>{};
     for (final item in _results) {
       final kategori = (item['kategori'] ?? 'Lainnya').toString();
       grouped.putIfAbsent(kategori, () => []).add(item);
@@ -211,8 +181,8 @@ class _SearchScreenState extends State<SearchScreen> {
           ...entry.value.map((item) => Card(
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
-                  title: Text(item['judul'] ?? item['nama'] ?? ''),
-                  subtitle: Text(item['asal'] ?? item['provinsi'] ?? ''),
+                  title: Text(item['nama'] ?? ''),
+                  subtitle: Text(item['provinsi'] ?? ''),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context
                       .go(AppRoutes.budayaDetailPath(item['id'] ?? '')),
