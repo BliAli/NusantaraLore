@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/gamification_service.dart';
 
 class TebakWayangScreen extends StatefulWidget {
   const TebakWayangScreen({super.key});
@@ -119,8 +120,17 @@ class _TebakWayangScreenState extends State<TebakWayangScreen> {
         _startTimer();
       } else {
         setState(() => _gameFinished = true);
+        _saveResult();
       }
     });
+  }
+
+  Future<void> _saveResult() async {
+    await GamificationService.saveQuizResult(
+      quizType: 'tebak_wayang',
+      skor: _score,
+    );
+    await GamificationService.awardXp(_score);
   }
 
   @override

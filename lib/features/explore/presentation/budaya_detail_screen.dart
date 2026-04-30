@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/database/hive_service.dart';
+import '../../../core/utils/notification_service.dart';
 
 class BudayaDetailScreen extends StatefulWidget {
   final String budayaId;
@@ -17,6 +19,7 @@ class BudayaDetailScreen extends StatefulWidget {
 class _BudayaDetailScreenState extends State<BudayaDetailScreen> {
   Map<String, dynamic>? _budaya;
   bool _isLoading = true;
+  bool _isBookmarked = false;
 
   @override
   void initState() {
@@ -40,10 +43,53 @@ class _BudayaDetailScreenState extends State<BudayaDetailScreen> {
         setState(() {
           _budaya = found != null ? Map<String, dynamic>.from(found) : null;
           _isLoading = false;
+          _isBookmarked = _checkBookmark();
         });
+        _trackKoleksi();
       }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  bool _checkBookmark() {
+    final list = HiveService.bookmark.get('ids');
+    if (list == null) return false;
+    return List<String>.from(list).contains(widget.budayaId);
+  }
+
+  void _toggleBookmark() {
+    final box = HiveService.bookmark;
+    final list = List<String>.from(box.get('ids') ?? []);
+    if (list.contains(widget.budayaId)) {
+      list.remove(widget.budayaId);
+    } else {
+      list.add(widget.budayaId);
+    }
+    box.put('ids', list);
+    setState(() => _isBookmarked = !_isBookmarked);
+  }
+
+  void _trackKoleksi() {
+    final box = HiveService.koleksi;
+    final list = List<String>.from(box.get('ids') ?? []);
+    if (!list.contains(widget.budayaId)) {
+      list.add(widget.budayaId);
+      box.put('ids', list);
+
+      if (list.length == 5) {
+        NotificationService.showAchievement(
+          'Kolektor Pemula — 5 budaya dijelajahi!',
+        );
+      } else if (list.length == 15) {
+        NotificationService.showAchievement(
+          'Kolektor Budaya — 15 budaya dijelajahi!',
+        );
+      } else if (list.length == 30) {
+        NotificationService.showAchievement(
+          'Ensiklopedia Hidup — 30 budaya dijelajahi!',
+        );
+      }
     }
   }
 
@@ -69,6 +115,15 @@ class _BudayaDetailScreenState extends State<BudayaDetailScreen> {
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
+            actions: [
+              IconButton(
+                onPressed: _toggleBookmark,
+                icon: Icon(
+                  _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                ),
+                tooltip: _isBookmarked ? 'Hapus bookmark' : 'Tambah bookmark',
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 _budaya!['judul'] ?? _budaya!['nama'] ?? '',

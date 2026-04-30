@@ -13,10 +13,13 @@ class AppRoutes {
   static const kuisMitos = '/home/games/kuis';
   static const puzzleBatik = '/home/games/puzzle';
   static const tebakWayang = '/home/games/wayang';
+  static const leaderboard = '/home/games/leaderboard';
   static const penjaga = '/home/penjaga';
   static const converter = '/home/converter';
   static const search = '/home/search';
   static const profile = '/home/profile';
+  static const bookmark = '/home/profile/bookmark';
+  static const quizHistory = '/home/profile/quiz-history';
 
   static String budayaDetailPath(String id) => '/home/explore/$id';
 }

@@ -46,7 +46,10 @@ class GamesMenuScreen extends StatelessWidget {
               onTap: () => context.go(AppRoutes.tebakWayang),
             ),
             const Spacer(),
-            Container(
+            InkWell(
+              onTap: () => context.go(AppRoutes.leaderboard),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -76,6 +79,7 @@ class GamesMenuScreen extends StatelessWidget {
                   Icon(Icons.chevron_right),
                 ],
               ),
+            ),
             ),
           ],
         ),

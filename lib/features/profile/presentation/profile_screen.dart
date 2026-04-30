@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../core/database/hive_service.dart';
 import '../../../core/security/session_manager.dart';
+import '../../../core/utils/gamification_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -17,6 +18,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _username = '';
   int _level = 1;
   int _xp = 0;
+  int _koleksiCount = 0;
+  int _bookmarkCount = 0;
 
   @override
   void initState() {
@@ -28,11 +31,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = await SessionManager.getCurrentUser();
     if (user != null && mounted) {
       final username = user['name'] ?? user['sub'] ?? '';
-      final userData = HiveService.user.get(username);
+      final progress = await GamificationService.getUserProgress();
       setState(() {
         _username = username;
-        _level = userData?['level'] ?? 1;
-        _xp = userData?['xp'] ?? 0;
+        _xp = (progress?['total_xp'] as int?) ?? 0;
+        _level = GamificationService.levelFromXp(_xp);
+        _koleksiCount = List<String>.from(
+          HiveService.koleksi.get('ids') ?? [],
+        ).length;
+        _bookmarkCount = List<String>.from(
+          HiveService.bookmark.get('ids') ?? [],
+        ).length;
       });
     }
   }
@@ -130,8 +139,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: LinearProgressIndicator(
+                            value: GamificationService.progressToNextLevel(_xp),
+                            backgroundColor: Colors.white24,
+                            color: kColorSecondary,
+                            minHeight: 8,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$_xp / ${GamificationService.xpForNextLevel(_xp)} XP ke Level ${_level + 1}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                _buildStatCard('Koleksi', '$_koleksiCount'),
+                const SizedBox(width: 12),
+                _buildStatCard('Bookmark', '$_bookmarkCount'),
+                const SizedBox(width: 12),
+                _buildStatCard('Level', '$_level'),
+              ],
             ),
             const SizedBox(height: 24),
             _buildMenuItem(
@@ -142,12 +186,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildMenuItem(
               icon: Icons.bookmark,
               label: 'Bookmark',
-              onTap: () {},
+              onTap: () => context.go(AppRoutes.bookmark),
             ),
             _buildMenuItem(
               icon: Icons.history,
               label: 'Riwayat Kuis',
-              onTap: () {},
+              onTap: () => context.go(AppRoutes.quizHistory),
             ),
             _buildMenuItem(
               icon: Icons.info_outline,
@@ -194,6 +238,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: Text(label),
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String label, String value) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: kColorSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: kColorSecondary.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: kColorPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 12, color: kColorTextLight),
+            ),
+          ],
+        ),
       ),
     );
   }

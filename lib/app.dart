@@ -17,10 +17,13 @@ import 'features/games/presentation/games_menu_screen.dart';
 import 'features/games/presentation/kuis_mitos_screen.dart';
 import 'features/games/presentation/puzzle_batik_screen.dart';
 import 'features/games/presentation/tebak_wayang_screen.dart';
+import 'features/games/presentation/leaderboard_screen.dart';
 import 'features/ai_penjaga/presentation/penjaga_screen.dart';
 import 'features/converter/presentation/converter_screen.dart';
 import 'features/search/presentation/search_screen.dart';
 import 'features/profile/presentation/profile_screen.dart';
+import 'features/profile/presentation/bookmark_screen.dart';
+import 'features/profile/presentation/quiz_history_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -86,6 +89,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const TebakWayangScreen(),
           ),
           GoRoute(
+            path: AppRoutes.leaderboard,
+            builder: (context, state) => const LeaderboardScreen(),
+          ),
+          GoRoute(
             path: AppRoutes.penjaga,
             builder: (context, state) => const PenjagaScreen(),
           ),
@@ -100,6 +107,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.profile,
             builder: (context, state) => const ProfileScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.bookmark,
+            builder: (context, state) => const BookmarkScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.quizHistory,
+            builder: (context, state) => const QuizHistoryScreen(),
           ),
         ],
       ),

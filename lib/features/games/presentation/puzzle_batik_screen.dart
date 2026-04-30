@@ -5,6 +5,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 import 'dart:async';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/gamification_service.dart';
 
 class PuzzleBatikScreen extends StatefulWidget {
   const PuzzleBatikScreen({super.key});
@@ -76,6 +77,16 @@ class _PuzzleBatikScreenState extends State<PuzzleBatikScreen> {
       if (_tiles[i] != i) return;
     }
     _solved = true;
+    _saveResult();
+  }
+
+  Future<void> _saveResult() async {
+    final xp = _moves <= 15 ? 50 : _moves <= 30 ? 30 : 10;
+    await GamificationService.saveQuizResult(
+      quizType: 'puzzle_batik',
+      skor: xp,
+    );
+    await GamificationService.awardXp(xp);
   }
 
   final _colors = [

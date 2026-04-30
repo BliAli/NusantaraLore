@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/gamification_service.dart';
 
 class KuisMitosScreen extends StatefulWidget {
   const KuisMitosScreen({super.key});
@@ -115,8 +116,17 @@ class _KuisMitosScreenState extends State<KuisMitosScreen> {
         _startTimer();
       } else {
         setState(() => _quizFinished = true);
+        _saveResult();
       }
     });
+  }
+
+  Future<void> _saveResult() async {
+    await GamificationService.saveQuizResult(
+      quizType: 'mitos_fakta',
+      skor: _score,
+    );
+    await GamificationService.awardXp(_score);
   }
 
   @override
