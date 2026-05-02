@@ -162,8 +162,23 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   color: kColorPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.auto_stories,
-                    color: kColorPrimary, size: 32),
+                child: (item['gambar'] != null &&
+                        (item['gambar'] as String).isNotEmpty)
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          item['gambar'],
+                          width: 72,
+                          height: 72,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(
+                              Icons.auto_stories,
+                              color: kColorPrimary,
+                              size: 32),
+                        ),
+                      )
+                    : const Icon(Icons.auto_stories,
+                        color: kColorPrimary, size: 32),
               ),
               const SizedBox(width: 12),
               Expanded(

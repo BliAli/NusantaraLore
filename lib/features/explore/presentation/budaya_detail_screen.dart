@@ -129,22 +129,62 @@ class _BudayaDetailScreenState extends State<BudayaDetailScreen> {
                 _budaya!['judul'] ?? _budaya!['nama'] ?? '',
                 style: const TextStyle(fontSize: 16),
               ),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      kColorPrimary,
-                      kColorPrimary.withValues(alpha: 0.8),
-                    ],
-                  ),
-                ),
-                child: const Center(
-                  child:
-                      Icon(Icons.auto_stories, size: 64, color: Colors.white54),
-                ),
-              ),
+              background: (_budaya!['gambar'] != null &&
+                      (_budaya!['gambar'] as String).isNotEmpty)
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.asset(
+                          _budaya!['gambar'],
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  kColorPrimary,
+                                  kColorPrimary.withValues(alpha: 0.8),
+                                ],
+                              ),
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.auto_stories,
+                                  size: 64, color: Colors.white54),
+                            ),
+                          ),
+                        ),
+                        // Gradient overlay for text readability
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.6),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            kColorPrimary,
+                            kColorPrimary.withValues(alpha: 0.8),
+                          ],
+                        ),
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.auto_stories,
+                            size: 64, color: Colors.white54),
+                      ),
+                    ),
             ),
           ),
           SliverToBoxAdapter(

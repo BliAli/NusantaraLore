@@ -95,8 +95,22 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
                             color: kColorPrimary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.auto_stories,
-                              color: kColorPrimary),
+                          child: (item['gambar'] != null &&
+                                  (item['gambar'] as String).isNotEmpty)
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.asset(
+                                    item['gambar'],
+                                    width: 48,
+                                    height: 48,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => const Icon(
+                                        Icons.auto_stories,
+                                        color: kColorPrimary),
+                                  ),
+                                )
+                              : const Icon(Icons.auto_stories,
+                                  color: kColorPrimary),
                         ),
                         title: Text(
                           item['judul'] ?? item['nama'] ?? '',
