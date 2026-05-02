@@ -81,4 +81,6 @@ flutter:
     - assets/data/
     - assets/images/
     - assets/images/legenda/
+    - assets/images/batik/
+    - assets/images/wayang/
     - .env
