@@ -15,4 +15,8 @@ class AuthRepository {
   bool userExists(String username) {
     return HiveService.user.containsKey(username);
   }
+
+  Future<void> deleteUser(String username) async {
+    await HiveService.user.delete(username);
+  }
 }

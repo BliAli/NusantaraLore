@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,6 +8,8 @@ import '../../../core/constants/app_routes.dart';
 import '../../../core/database/hive_service.dart';
 import '../../../core/security/session_manager.dart';
 import '../../../core/utils/gamification_service.dart';
+import '../../auth/data/auth_repository.dart';
+import '../../auth/domain/auth_usecase.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -14,16 +18,26 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
+  final _authUseCase = AuthUseCase(AuthRepository());
+
   String _username = '';
   int _level = 1;
   int _xp = 0;
   int _koleksiCount = 0;
   int _bookmarkCount = 0;
+  String? _profilePhotoPath;
 
   @override
   void initState() {
     super.initState();
+    _loadProfile();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload every time this screen becomes visible
     _loadProfile();
   }
 
@@ -32,8 +46,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (user != null && mounted) {
       final username = user['name'] ?? user['sub'] ?? '';
       final progress = await GamificationService.getUserProgress();
+      final photo = _authUseCase.getProfilePhoto(username);
       setState(() {
         _username = username;
+        _profilePhotoPath = photo;
         _xp = (progress?['total_xp'] as int?) ?? 0;
         _level = GamificationService.levelFromXp(_xp);
         _koleksiCount = List<String>.from(
@@ -92,18 +108,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.white24,
-                    child: Text(
-                      _username.isNotEmpty
-                          ? _username[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                        fontSize: 32,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  // Profile photo or initial
+                  Container(
+                    width: 84,
+                    height: 84,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white38, width: 3),
+                    ),
+                    child: ClipOval(
+                      child: _profilePhotoPath != null &&
+                              File(_profilePhotoPath!).existsSync()
+                          ? Image.file(
+                              File(_profilePhotoPath!),
+                              width: 84,
+                              height: 84,
+                              fit: BoxFit.cover,
+                            )
+                          : Container(
+                              color: Colors.white24,
+                              child: Center(
+                                child: Text(
+                                  _username.isNotEmpty
+                                      ? _username[0].toUpperCase()
+                                      : '?',
+                                  style: const TextStyle(
+                                    fontSize: 32,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -147,7 +183,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: LinearProgressIndicator(
-                            value: GamificationService.progressToNextLevel(_xp),
+                            value:
+                                GamificationService.progressToNextLevel(_xp),
                             backgroundColor: Colors.white24,
                             color: kColorSecondary,
                             minHeight: 8,
@@ -178,6 +215,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
             const SizedBox(height: 24),
+            _buildMenuItem(
+              icon: Icons.edit,
+              label: 'Edit Profil',
+              onTap: () => context.go(AppRoutes.editProfile),
+            ),
             _buildMenuItem(
               icon: Icons.currency_exchange,
               label: 'Konverter',

@@ -6,6 +6,7 @@ class UserModel {
   final String createdAt;
   final List<String> badges;
   final int streakDays;
+  final String profilePhoto;
 
   const UserModel({
     required this.username,
@@ -15,6 +16,7 @@ class UserModel {
     required this.createdAt,
     this.badges = const [],
     this.streakDays = 0,
+    this.profilePhoto = '',
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
@@ -26,6 +28,7 @@ class UserModel {
       createdAt: map['createdAt'] ?? '',
       badges: List<String>.from(map['badges'] ?? []),
       streakDays: map['streakDays'] ?? 0,
+      profilePhoto: map['profilePhoto'] ?? '',
     );
   }
 
@@ -38,6 +41,7 @@ class UserModel {
       'createdAt': createdAt,
       'badges': badges,
       'streakDays': streakDays,
+      'profilePhoto': profilePhoto,
     };
   }
 
@@ -49,6 +53,7 @@ class UserModel {
     String? createdAt,
     List<String>? badges,
     int? streakDays,
+    String? profilePhoto,
   }) {
     return UserModel(
       username: username ?? this.username,
@@ -58,6 +63,7 @@ class UserModel {
       createdAt: createdAt ?? this.createdAt,
       badges: badges ?? this.badges,
       streakDays: streakDays ?? this.streakDays,
+      profilePhoto: profilePhoto ?? this.profilePhoto,
     );
   }
 

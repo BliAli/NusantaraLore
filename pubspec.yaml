@@ -38,6 +38,7 @@ dependencies:
   # Sensor
   sensors_plus: ^4.0.0
   camera: ^0.10.0
+  image_picker: ^1.0.0
 
   # AI / LLM
   google_generative_ai: ^0.4.0

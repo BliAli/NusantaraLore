@@ -20,6 +20,7 @@ class AppRoutes {
   static const profile = '/home/profile';
   static const bookmark = '/home/profile/bookmark';
   static const quizHistory = '/home/profile/quiz-history';
+  static const editProfile = '/home/profile/edit';
 
   static String budayaDetailPath(String id) => '/home/explore/$id';
 }

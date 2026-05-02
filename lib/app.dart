@@ -24,6 +24,7 @@ import 'features/search/presentation/search_screen.dart';
 import 'features/profile/presentation/profile_screen.dart';
 import 'features/profile/presentation/bookmark_screen.dart';
 import 'features/profile/presentation/quiz_history_screen.dart';
+import 'features/profile/presentation/edit_profile_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -115,6 +116,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.quizHistory,
             builder: (context, state) => const QuizHistoryScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.editProfile,
+            builder: (context, state) => const EditProfileScreen(),
           ),
         ],
       ),
