@@ -1,0 +1,97 @@
+@startuml seq_06_cari_budaya
+' ============================================
+' SEQUENCE DIAGRAM — Cari Budaya (Search)
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — Cari Budaya (Search)**
+
+actor "Pengguna" as U
+participant "SearchScreen" as SS
+participant "BudayaRepository" as BR
+participant "SQLiteService" as DB
+participant "HiveService\n(searchHistory)" as HS
+
+== Buka Search ==
+
+U -> SS : Buka SearchScreen /\nTap SearchBar
+activate SS
+
+SS -> HS : getSearchHistory()
+activate HS
+HS --> SS : List<String>\n(max 10 history terbaru)
+deactivate HS
+
+SS --> U : Tampilkan search history\n& konten populer
+
+== Input Pencarian ==
+
+U -> SS : Ketik query pencarian
+activate SS
+
+loop Autocomplete (debounce 300ms)
+  SS -> BR : searchBudaya(query)
+  activate BR
+
+  BR -> DB : query(\n  "SELECT * FROM budaya\n   WHERE nama LIKE '%query%'\n   OR provinsi LIKE '%query%'\n   OR tags LIKE '%query%'\n   ORDER BY nama"\n)
+  activate DB
+  DB --> BR : List<BudayaModel>
+  deactivate DB
+
+  BR --> SS : List<BudayaModel>
+  deactivate BR
+
+  SS --> U : Tampilkan autocomplete\nsuggestions
+end
+
+== Submit Pencarian ==
+
+U -> SS : Tap search / enter
+activate SS
+
+SS -> BR : searchBudaya(query)
+activate BR
+BR -> DB : Full text search query
+activate DB
+DB --> BR : List<BudayaModel>
+deactivate DB
+BR --> SS : List<BudayaModel>
+deactivate BR
+
+SS -> HS : saveSearchHistory(query)
+activate HS
+note right of HS
+  Simpan max 10 history.
+  Jika > 10, hapus yang
+  paling lama.
+end note
+HS --> SS : saved
+deactivate HS
+
+alt #E8F5E9 Ada hasil
+  SS -> SS : Kelompokkan hasil:\n- Legenda\n- Tradisi\n- Artefak\n- Seni
+  SS --> U : Tampilkan hasil\ndikelompokkan per kategori
+
+  U -> SS : Tap item hasil
+  SS --> U : Navigasi ke\nBudayaDetailScreen(id)
+
+else #FFFDE7 Tidak ada hasil
+  SS --> U : Tampilkan empty state:\n"Tidak ditemukan"\n+ Saran konten populer
+end
+
+deactivate SS
+deactivate SS
+
+@enduml

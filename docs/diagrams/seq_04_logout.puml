@@ -1,0 +1,73 @@
+@startuml seq_04_logout
+' ============================================
+' SEQUENCE DIAGRAM — Logout
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — Logout & Session Cleanup**
+
+actor "Pengguna" as U
+participant "ProfileScreen" as PS
+participant "AuthRepository" as AR
+participant "SessionManager" as SM
+participant "SecureStorage" as SS
+participant "HiveService" as HS
+
+== Proses Logout ==
+
+U -> PS : Tap tombol "Keluar"
+activate PS
+
+PS --> U : Dialog konfirmasi\n"Yakin ingin keluar?"
+
+alt #E8E8E8 User batal
+  U -> PS : Tap "Batal"
+  PS --> U : Tutup dialog
+else #E8F5E9 User konfirmasi logout
+  U -> PS : Tap "Ya, Keluar"
+
+  PS -> AR : logout()
+  activate AR
+
+  AR -> SM : invalidateSession()
+  activate SM
+  SM --> AR : session cleared
+  deactivate SM
+
+  AR -> SS : deleteToken()
+  activate SS
+  SS --> AR : success
+  deactivate SS
+
+  AR -> HS : clearSessionBox()
+  activate HS
+  HS --> AR : success
+  deactivate HS
+
+  note right of AR
+    Data user & progress tetap
+    tersimpan di Hive & SQLite.
+    Hanya session yang dihapus.
+  end note
+
+  AR --> PS : LogoutResult.success
+  deactivate AR
+
+  PS --> U : Navigasi ke LoginScreen\n(clear navigation stack)
+end
+
+deactivate PS
+
+@enduml

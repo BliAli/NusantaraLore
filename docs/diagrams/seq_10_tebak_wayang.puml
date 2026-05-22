@@ -1,0 +1,113 @@
+@startuml seq_10_tebak_wayang
+' ============================================
+' SEQUENCE DIAGRAM — Tebak Wayang
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — Tebak Wayang**
+
+actor "Pengguna" as U
+participant "TebakWayangScreen" as TW
+participant "AssetBundle\n(wayang.json)" as AB
+participant "SQLiteService" as DB
+participant "HiveService" as HS
+
+== Mulai Game ==
+
+U -> TW : Buka "Tebak Wayang"
+activate TW
+
+TW -> AB : loadString(\n  'assets/data/wayang.json')
+activate AB
+AB --> TW : JSON data wayang
+deactivate AB
+
+TW -> TW : Parse data wayang
+TW -> TW : Shuffle & pilih 10 soal
+TW -> TW : Set variabel:\n  skor = 0, round = 0
+
+TW --> U : Tampilkan siluet wayang\npertama + 4 opsi jawaban\n+ timer 20 detik
+
+== Loop Tebak Wayang ==
+
+loop 10 ronde
+
+  ref over TW : Timer countdown 20 detik
+
+  TW -> TW : Generate 4 opsi:\n  1 jawaban benar +\n  3 pengecoh acak
+
+  TW --> U : Tampilkan:\n- Siluet/shadow wayang\n- 4 pilihan nama tokoh\n- Timer 20 detik
+
+  alt #E8F5E9 User menjawab
+
+    U -> TW : Pilih salah satu jawaban
+    activate TW
+
+    TW -> TW : sisaWaktu = 20 - elapsed
+    TW -> TW : Hitung poin:\n  makin cepat = makin banyak\n  poin = (sisaWaktu / 20) × 100
+
+    alt Jawaban BENAR
+      TW -> TW : skor += poin
+      TW --> U : Animasi benar!\nTampilkan gambar asli wayang\n+ nama & deskripsi singkat\n"+ [poin] poin"
+
+      opt Kartu koleksi baru
+        TW -> HS : addKartuWayang(wayangId)
+        activate HS
+        HS --> TW : success
+        deactivate HS
+        TW --> U : "Kartu koleksi baru!\n[Nama Tokoh]"
+      end
+
+    else Jawaban SALAH
+      TW --> U : Tampilkan jawaban benar\n+ gambar asli wayang
+    end
+
+    deactivate TW
+
+  else #FFFDE7 Waktu habis
+    TW --> U : "Waktu habis!"\nTampilkan jawaban benar
+  end
+
+  TW -> TW : round += 1
+
+  alt Masih ada ronde
+    TW --> U : Transisi ke siluet\nwayang berikutnya
+  end
+
+end
+
+== Hasil Akhir ==
+
+TW -> TW : Hitung total:\n  totalSkor, benar, salah
+
+TW --> U : Halaman hasil:\n- Total skor\n- Benar / Salah\n- Kartu koleksi didapat\n- XP yang diperoleh
+
+== Simpan Hasil ==
+
+TW -> DB : INSERT quiz_history({\n  quiz_type: 'tebak_wayang',\n  skor: totalSkor\n})
+activate DB
+DB --> TW : saved
+deactivate DB
+
+TW -> DB : UPDATE user_progress\nSET total_xp += earnedXP
+activate DB
+DB --> TW : updated
+deactivate DB
+
+TW --> U : Tombol:\n"Main Lagi" / "Kembali"
+
+deactivate TW
+
+@enduml

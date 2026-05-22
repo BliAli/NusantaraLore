@@ -1,0 +1,128 @@
+@startuml seq_08_kuis_mitos
+' ============================================
+' SEQUENCE DIAGRAM — Kuis Mitos & Fakta
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — Kuis Mitos & Fakta**
+
+actor "Pengguna" as U
+participant "GamesMenuScreen" as GM
+participant "KuisMitosScreen" as KM
+participant "AssetBundle\n(kuis.json)" as AB
+participant "SQLiteService" as DB
+
+== Mulai Kuis ==
+
+U -> GM : Buka tab "Arena"
+activate GM
+GM --> U : Tampilkan menu games:\n- Kuis Mitos & Fakta\n- Puzzle Batik\n- Tebak Wayang
+
+U -> GM : Tap "Kuis Mitos & Fakta"
+GM -> KM : navigate()
+deactivate GM
+activate KM
+
+KM -> AB : loadString(\n  'assets/data/kuis.json')
+activate AB
+AB --> KM : JSON string
+deactivate AB
+
+KM -> KM : Parse & shuffle soal
+KM -> KM : Set variabel:\n  skor = 0\n  streak = 0\n  soalIndex = 0
+
+KM --> U : Tampilkan soal pertama\n+ timer 30 detik
+
+== Loop Soal ==
+
+loop Untuk setiap soal (10 soal)
+
+  ref over KM : Timer countdown 30 detik
+
+  alt #E8F5E9 User menjawab dalam waktu
+
+    U -> KM : Pilih jawaban\n(Mitos / Fakta)
+    activate KM
+
+    alt #E8F5E9 Jawaban BENAR
+      KM -> KM : skor += 10 XP
+      KM -> KM : streak += 1
+
+      opt streak == 3
+        KM -> KM : skor += 20 XP (BONUS!)
+        KM -> KM : streak = 0
+        KM --> U : Animasi "STREAK BONUS!\n+20 XP"
+      end
+
+      KM --> U : Animasi jawaban benar\n+ XP gained
+
+    else #FFE0E0 Jawaban SALAH
+      KM -> KM : streak = 0
+      KM --> U : Tampilkan jawaban benar\n+ penjelasan singkat
+    end
+
+    deactivate KM
+
+  else #FFFDE7 Waktu habis (timeout)
+    KM -> KM : streak = 0
+    KM --> U : "Waktu habis!"\nTampilkan jawaban benar
+  end
+
+  KM -> KM : soalIndex += 1
+
+  alt Masih ada soal
+    KM --> U : Tampilkan soal berikutnya\n+ reset timer 30 detik
+  end
+
+end
+
+== Hasil Kuis ==
+
+KM -> KM : Hitung hasil akhir:\n  totalSkor, benar, salah
+
+KM --> U : Tampilkan halaman hasil:\n- Skor total\n- Jawaban benar / salah\n- XP yang didapat
+
+== Simpan Hasil ==
+
+KM -> DB : insert quiz_history({\n  id: uuid,\n  user_id: userId,\n  quiz_type: 'mitos_fakta',\n  skor: totalSkor,\n  waktu_selesai: now()\n})
+activate DB
+DB --> KM : saved
+deactivate DB
+
+KM -> DB : update user_progress\nSET total_xp = total_xp + skor
+activate DB
+DB --> KM : updated
+deactivate DB
+
+KM -> DB : SELECT total_xp, level\nFROM user_progress
+activate DB
+DB --> KM : currentXP, currentLevel
+deactivate DB
+
+opt XP cukup untuk naik level
+  KM -> KM : newLevel = calculateLevel(xp)
+  KM -> DB : UPDATE user_progress\nSET level = newLevel
+  activate DB
+  DB --> KM : updated
+  deactivate DB
+
+  KM --> U : Notifikasi\n"Selamat! Naik ke Level [X]!"
+end
+
+KM --> U : Tombol:\n"Main Lagi" / "Kembali"
+
+deactivate KM
+
+@enduml

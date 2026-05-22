@@ -1,0 +1,86 @@
+@startuml seq_13_konversi_zona_waktu
+' ============================================
+' SEQUENCE DIAGRAM — Konversi Zona Waktu
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — Konversi Zona Waktu**
+
+actor "Pengguna" as U
+participant "TimezoneConverter\nScreen" as TC
+participant "timezone\npackage" as TZ
+
+== Buka Konverter Waktu ==
+
+U -> TC : Buka tab "Konverter"\n→ Zona Waktu
+activate TC
+
+TC -> TZ : initializeTimeZones()
+activate TZ
+TZ --> TC : timezone data loaded
+deactivate TZ
+
+TC --> U : Tampilkan form:\n- Zona waktu asal\n- Zona waktu tujuan\n- Input waktu (jam:menit)\nZona: WIB, WITA, WIT,\nLondon, Tokyo
+
+== Input & Konversi ==
+
+U -> TC : Pilih zona asal & tujuan,\ninput waktu
+activate TC
+
+note right of TC
+  Zona Waktu yang Didukung:
+  - Asia/Jakarta → WIB (UTC+7)
+  - Asia/Makassar → WITA (UTC+8)
+  - Asia/Jayapura → WIT (UTC+9)
+  - Europe/London → GMT/BST
+  - Asia/Tokyo → JST (UTC+9)
+end note
+
+TC -> TZ : TZDateTime.from(\n  inputTime,\n  location: sourceTimezone\n)
+activate TZ
+TZ --> TC : sourceTZDateTime
+deactivate TZ
+
+TC -> TZ : sourceTZDateTime\n  .toUtc()\n  .toLocal(targetTimezone)
+activate TZ
+TZ --> TC : convertedTZDateTime
+deactivate TZ
+
+TC -> TC : Format hasil:\n  "HH:mm dd MMM yyyy"
+
+TC --> U : Tampilkan hasil:\n"[waktu asal] [zona asal]\n= [waktu tujuan] [zona tujuan]"\n\nKonteks:\n"Jadwal festival &\npertunjukan budaya"
+
+deactivate TC
+
+== Konversi Semua Zona Sekaligus ==
+
+opt User tap "Lihat Semua Zona"
+  U -> TC : Tap "Semua Zona"
+  activate TC
+
+  loop Untuk setiap zona waktu
+    TC -> TZ : convert(inputTime,\n  toZone: zona[i])
+    activate TZ
+    TZ --> TC : convertedTime[i]
+    deactivate TZ
+  end
+
+  TC --> U : Tampilkan tabel:\n| WIB  | 10:00 |\n| WITA | 11:00 |\n| WIT  | 12:00 |\n| GMT  | 03:00 |\n| JST  | 12:00 |
+  deactivate TC
+end
+
+deactivate TC
+
+@enduml

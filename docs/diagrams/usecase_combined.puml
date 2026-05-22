@@ -1,0 +1,230 @@
+@startuml UseCase_NusantaraLore
+' ============================================
+' USE CASE DIAGRAM — NusantaraLore (Combined)
+' ============================================
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam handwritten false
+
+skinparam usecase {
+  BackgroundColor #FEFCE8
+  BorderColor #92400E
+  ArrowColor #78350F
+  FontSize 11
+}
+skinparam actor {
+  BorderColor #78350F
+  FontSize 12
+  FontStyle bold
+}
+skinparam rectangle {
+  BorderColor #D4A017
+  BackgroundColor transparent
+  FontColor #8B1A1A
+  FontStyle bold
+  RoundCorner 8
+  BorderStyle dashed
+}
+
+' ==========================================
+' AKTOR UTAMA (sisi kiri)
+' ==========================================
+actor "Pengguna" as U
+
+' ==========================================
+' GRUP 1 — Autentikasi & Akun
+' ==========================================
+rectangle "Autentikasi & Akun" {
+  usecase "UC-01\nRegister" as UC01
+  usecase "UC-02\nLogin" as UC02
+  usecase "UC-03\nLogout" as UC03
+  usecase "UC-04\nLogin Biometrik" as UC04
+  usecase "UC-05\nSetup PIN" as UC05
+  usecase "UC-06\nHash Password\n(SHA-256)" as UC06
+  usecase "UC-07\nKelola Session\nJWT" as UC07
+}
+
+' ==========================================
+' GRUP 2 — Eksplorasi Budaya
+' ==========================================
+rectangle "Eksplorasi Budaya" {
+  usecase "UC-08\nJelajah Legenda\n& Budaya" as UC08
+  usecase "UC-09\nLihat Detail\nBudaya" as UC09
+  usecase "UC-10\nCari Budaya" as UC10
+  usecase "UC-11\nTambah ke\nBookmark" as UC11
+  usecase "UC-12\nTambah ke\nKoleksi" as UC12
+  usecase "UC-39\nShake Discovery\n(Konten Acak)" as UC39
+}
+
+' ==========================================
+' GRUP 3 — Peta Budaya (LBS)
+' ==========================================
+rectangle "Peta Budaya (LBS)" {
+  usecase "UC-13\nLihat Peta\nBudaya" as UC13
+  usecase "UC-14\nLihat Budaya\nTerdekat" as UC14
+  usecase "UC-15\nTilt Rotasi\nPeta" as UC15
+}
+
+' ==========================================
+' GRUP 4 — Arena Budaya (Games & Gamifikasi)
+' ==========================================
+rectangle "Arena Budaya (Games)" {
+  usecase "UC-16\nKuis Mitos\n& Fakta" as UC16
+  usecase "UC-17\nPuzzle Batik" as UC17
+  usecase "UC-18\nTebak Wayang" as UC18
+  usecase "UC-19\nLihat\nLeaderboard" as UC19
+  usecase "UC-20\nShake Acak\nPuzzle" as UC20
+  usecase "UC-33\nDapatkan XP" as UC33
+  usecase "UC-34\nNaik Level" as UC34
+  usecase "UC-35\nLihat\nPencapaian" as UC35
+  usecase "UC-36R\nLihat Riwayat\nKuis" as UC36R
+}
+
+' ==========================================
+' GRUP 5 — AI Penjaga (Ki Dalang)
+' ==========================================
+rectangle "AI Penjaga (Ki Dalang)" {
+  usecase "UC-21\nMulai Percakapan\nAI" as UC21
+  usecase "UC-22\nTanya Jawab\nBudaya" as UC22
+  usecase "UC-23\nCeritakan\nLegenda" as UC23
+  usecase "UC-24\nReset Sesi\nPercakapan" as UC24
+}
+
+' ==========================================
+' GRUP 6 — Utilitas & Konverter
+' ==========================================
+rectangle "Utilitas & Konverter" {
+  usecase "UC-31\nKonversi\nMata Uang" as UC31
+  usecase "UC-32\nKonversi\nZona Waktu" as UC32
+}
+
+' ==========================================
+' GRUP 7 — Notifikasi
+' ==========================================
+rectangle "Notifikasi" {
+  usecase "UC-36\nDaily Reminder" as UC36
+  usecase "UC-37\nNotifikasi\nAchievement" as UC37
+  usecase "UC-38\nAtur Pengingat" as UC38
+}
+
+' ==========================================
+' GRUP 8 — Profil & Pengaturan
+' ==========================================
+rectangle "Profil & Pengaturan" {
+  usecase "UC-P1\nLihat Profil" as UCP1
+  usecase "UC-P2\nEdit Username" as UCP2
+  usecase "UC-P3\nEdit Password" as UCP3
+  usecase "UC-P4\nUbah Foto\nProfil" as UCP4
+  usecase "UC-P5\nLihat Bookmark" as UCP5
+  usecase "UC-P6\nVerifikasi\nBiometrik" as UCP6
+}
+
+' ==========================================
+' AKTOR SISTEM (sisi kanan)
+' ==========================================
+actor "Sistem\nBiometrik" as SB
+actor "Sensor\nGyroscope" as SG
+actor "Sensor\nAccelerometer" as SA
+actor "OpenStreetMap\nAPI" as OSM
+actor "Google\nGemini AI" as AI
+actor "ExchangeRate\nAPI" as ERA
+
+' ==========================================
+' RELASI: Pengguna --> Use Cases
+' ==========================================
+' -- Autentikasi
+U --> UC01
+U --> UC02
+U --> UC03
+
+' -- Eksplorasi
+U --> UC08
+U --> UC09
+U --> UC10
+U --> UC11
+U --> UC12
+
+' -- Peta
+U --> UC13
+U --> UC14
+
+' -- Games
+U --> UC16
+U --> UC17
+U --> UC18
+U --> UC19
+
+' -- AI
+U --> UC21
+U --> UC22
+U --> UC23
+
+' -- Utilitas
+U --> UC31
+U --> UC32
+U --> UC38
+
+' -- Profil
+U --> UCP1
+U --> UCP2
+U --> UCP3
+U --> UCP4
+U --> UCP5
+
+' ==========================================
+' RELASI: Use Cases --> Aktor Sistem
+' ==========================================
+UC04 --> SB
+UCP6 --> SB
+
+UC15 --> SG
+
+UC39 --> SA
+UC20 --> SA
+
+UC13 --> OSM
+UC14 --> OSM
+
+UC21 --> AI
+UC22 --> AI
+UC23 --> AI
+
+UC31 --> ERA
+
+' ==========================================
+' RELASI: <<include>>
+' ==========================================
+UC01 ..> UC06 : <<include>>
+UC01 ..> UC07 : <<include>>
+UC02 ..> UC06 : <<include>>
+UC02 ..> UC07 : <<include>>
+UC04 ..> UC07 : <<include>>
+
+UC16 ..> UC33 : <<include>>
+UC17 ..> UC33 : <<include>>
+UC18 ..> UC33 : <<include>>
+UC33 ..> UC34 : <<include>>
+
+UCP2 ..> UCP6 : <<include>>
+UCP3 ..> UCP6 : <<include>>
+UCP4 ..> UCP6 : <<include>>
+
+' ==========================================
+' RELASI: <<extend>>
+' ==========================================
+UC02 <.. UC04 : <<extend>>
+UC02 <.. UC05 : <<extend>>
+
+UC08 <.. UC39 : <<extend>>
+
+UC17 <.. UC20 : <<extend>>
+UC33 <.. UC35 : <<extend>>
+
+UC38 <.. UC36 : <<extend>>
+
+UC21 <.. UC24 : <<extend>>
+
+@enduml

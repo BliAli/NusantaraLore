@@ -1,0 +1,86 @@
+@startuml seq_16_leaderboard
+' ============================================
+' SEQUENCE DIAGRAM — Leaderboard
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — Leaderboard & Riwayat Kuis**
+
+actor "Pengguna" as U
+participant "GamesMenuScreen" as GM
+participant "LeaderboardWidget" as LW
+participant "SQLiteService" as DB
+participant "HiveService" as HS
+
+== Lihat Leaderboard ==
+
+U -> GM : Buka tab "Arena"
+activate GM
+
+GM -> LW : loadLeaderboard()
+activate LW
+
+LW -> DB : query(\n  "SELECT user_id, username,\n   total_xp, rank\n   FROM leaderboard\n   ORDER BY total_xp DESC\n   LIMIT 10"\n)
+activate DB
+DB --> LW : List<LeaderboardEntry>\n(Top 10)
+deactivate DB
+
+LW -> HS : getCurrentUserId()
+activate HS
+HS --> LW : userId
+deactivate HS
+
+LW -> DB : query(\n  "SELECT rank, total_xp\n   FROM leaderboard\n   WHERE user_id = ?"\n)
+activate DB
+DB --> LW : userRank & userXP
+deactivate DB
+
+LW --> GM : LeaderboardData
+deactivate LW
+
+GM --> U : Tampilkan Leaderboard:\n- Top 10 (avatar, nama,\n  level, XP)\n- Posisi user saat ini\n  (di-highlight)
+
+== Lihat Riwayat Kuis ==
+
+U -> GM : Tap "Riwayat Kuis"
+activate GM
+
+GM -> DB : query(\n  "SELECT quiz_type, skor,\n   waktu_selesai\n   FROM quiz_history\n   WHERE user_id = ?\n   ORDER BY waktu_selesai DESC\n   LIMIT 20"\n)
+activate DB
+DB --> GM : List<QuizHistory>
+deactivate DB
+
+GM --> U : Tampilkan riwayat:\n| Tipe      | Skor | Tanggal |\n| Kuis Mitos|  80  | 5 Mei   |\n| Puzzle    |  95  | 4 Mei   |\n| Wayang    |  70  | 3 Mei   |
+
+deactivate GM
+
+== Lihat Pencapaian ==
+
+U -> GM : Tap "Pencapaian"
+activate GM
+
+GM -> DB : query(\n  "SELECT total_xp, level,\n   badges, streak_days\n   FROM user_progress\n   WHERE user_id = ?"\n)
+activate DB
+DB --> GM : UserProgress
+deactivate DB
+
+GM -> GM : Parse badges JSON array
+
+GM --> U : Tampilkan:\n- Level & progress bar XP\n- Streak hari aktif\n- Badges yang dimiliki\n  (locked / unlocked)
+
+deactivate GM
+deactivate GM
+
+@enduml

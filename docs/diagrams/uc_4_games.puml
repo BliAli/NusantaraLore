@@ -1,0 +1,43 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FEFCE8
+  BorderColor #92400E
+  ArrowColor #78350F
+}
+skinparam actor {
+  BorderColor #78350F
+}
+
+actor "Pengguna" as U
+actor "Sensor\nAccelerometer" as SA
+
+rectangle "Arena Budaya (Games)" {
+  usecase "UC-16\nKuis Mitos & Fakta" as UC16
+  usecase "UC-17\nPuzzle Batik" as UC17
+  usecase "UC-18\nTebak Wayang" as UC18
+  usecase "UC-19\nLeaderboard" as UC19
+  usecase "UC-20\nGoyangkan HP\nAcak Puzzle" as UC20
+}
+
+rectangle "Gamifikasi" {
+  usecase "UC-33\nDapatkan XP" as UC33
+  usecase "UC-34\nNaik Level" as UC34
+  usecase "UC-35\nLihat Pencapaian" as UC35
+}
+
+U --> UC16
+U --> UC17
+U --> UC18
+U --> UC19
+
+UC16 ..> UC33 : <<include>>
+UC17 ..> UC33 : <<include>>
+UC18 ..> UC33 : <<include>>
+UC33 ..> UC34 : <<include>>
+UC33 <.. UC35 : <<extend>>
+
+UC17 <.. UC20 : <<extend>>
+SA --> UC20
+@enduml

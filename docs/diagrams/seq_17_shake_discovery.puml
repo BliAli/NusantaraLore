@@ -1,0 +1,98 @@
+@startuml seq_17_shake_discovery
+' ============================================
+' SEQUENCE DIAGRAM — Shake Discovery (Konten Acak)
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — Shake Discovery (Sensor Accelerometer)**
+
+actor "Pengguna" as U
+participant "HomeScreen /\nExploreScreen" as HS
+participant "Accelerometer\n(sensors_plus)" as AC
+participant "BudayaRepository" as BR
+participant "SQLiteService" as DB
+
+== Aktivasi Sensor ==
+
+U -> HS : Buka HomeScreen\natau ExploreScreen
+activate HS
+
+HS -> AC : accelerometerEvents.listen()
+activate AC
+
+note right of AC
+  Sensor aktif selama
+  screen visible.
+  Threshold: magnitude > 15 m/s²
+  Debounce: min 1 detik
+end note
+
+== Deteksi Shake ==
+
+loop Mendengarkan sensor
+
+  AC -> HS : AccelerometerEvent(\n  x, y, z)
+  activate HS
+
+  HS -> HS : magnitude = √(x² + y² + z²)
+
+  alt magnitude > 15 m/s²
+
+    HS -> HS : Cek debounce:\nlastShake > 1 detik lalu?
+
+    alt #E8F5E9 Debounce valid (shake terdeteksi)
+
+      HS -> HS : lastShakeTime = now()
+
+      HS -> BR : getRandomBudaya()
+      activate BR
+
+      BR -> DB : query(\n  "SELECT * FROM budaya\n   ORDER BY RANDOM()\n   LIMIT 1"\n)
+      activate DB
+      DB --> BR : BudayaModel (random)
+      deactivate DB
+
+      BR --> HS : BudayaModel
+      deactivate BR
+
+      HS --> U : Tampilkan dialog/card:\n"Kamu menemukan..."\n+ Animasi discovery\n\n[Gambar budaya]\n[Nama budaya]\n[Asal daerah]\n\nTombol: "Lihat Detail" / "Tutup"
+
+      opt User tap "Lihat Detail"
+        U -> HS : Tap "Lihat Detail"
+        HS --> U : Navigasi ke\nBudayaDetailScreen(id)
+      end
+
+    else Debounce belum habis
+      HS -> HS : Abaikan shake
+    end
+
+  else magnitude <= 15
+    HS -> HS : Bukan shake,\nabaikan
+  end
+
+  deactivate HS
+
+end
+
+== Cleanup ==
+
+note over HS : Saat user meninggalkan\nscreen (dispose)
+
+HS -> AC : cancelSubscription()
+deactivate AC
+
+deactivate HS
+
+@enduml

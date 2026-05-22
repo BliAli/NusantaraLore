@@ -1,0 +1,123 @@
+@startuml seq_05_eksplorasi_detail
+' ============================================
+' SEQUENCE DIAGRAM — Eksplorasi & Detail Budaya
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — Eksplorasi & Detail Budaya**
+
+actor "Pengguna" as U
+participant "ExploreScreen" as EX
+participant "BudayaDetailScreen" as BD
+participant "BudayaRepository" as BR
+participant "SQLiteService" as DB
+participant "HiveService" as HS
+
+== Muat Daftar Budaya ==
+
+U -> EX : Buka tab "Jelajah"
+activate EX
+
+EX -> BR : getAllBudaya(kategori?)
+activate BR
+
+BR -> DB : query("SELECT * FROM budaya\n  WHERE kategori = ?\n  ORDER BY nama")
+activate DB
+DB --> BR : List<BudayaModel>
+deactivate DB
+
+BR --> EX : List<BudayaModel>
+deactivate BR
+
+EX --> U : Tampilkan grid/list\nkonten budaya
+
+== Filter Kategori ==
+
+opt User memilih kategori
+  U -> EX : Pilih kategori\n(Legenda / Tradisi / Artefak / Seni)
+  EX -> BR : getAllBudaya(kategori: "legenda")
+  activate BR
+  BR -> DB : query("...WHERE kategori = 'legenda'")
+  activate DB
+  DB --> BR : filtered list
+  deactivate DB
+  BR --> EX : List<BudayaModel>
+  deactivate BR
+  EX --> U : Tampilkan hasil filter
+end
+
+== Lihat Detail Budaya ==
+
+U -> EX : Tap item budaya
+EX -> BD : navigate(budayaId)
+deactivate EX
+activate BD
+
+BD -> BR : getBudayaById(id)
+activate BR
+BR -> DB : query("SELECT * FROM budaya\n  WHERE id = ?")
+activate DB
+DB --> BR : BudayaModel
+deactivate DB
+BR --> BD : BudayaModel
+deactivate BR
+
+BD -> HS : isBookmarked(budayaId)
+activate HS
+HS --> BD : true / false
+deactivate HS
+
+BD --> U : Tampilkan detail:\n- Gambar, Judul, Asal\n- Deskripsi lengkap\n- Peta lokasi\n- Status bookmark
+
+== Tambah Bookmark ==
+
+opt User tap tombol bookmark
+  U -> BD : Tap ikon bookmark
+  BD -> HS : toggleBookmark(budayaId)
+  activate HS
+
+  alt Belum di-bookmark
+    HS -> HS : bookmarkBox.add(budayaId)
+    HS --> BD : BookmarkResult.added
+  else Sudah di-bookmark
+    HS -> HS : bookmarkBox.remove(budayaId)
+    HS --> BD : BookmarkResult.removed
+  end
+  deactivate HS
+
+  BD --> U : Update ikon bookmark\n(filled / outline)
+end
+
+== Tambah ke Koleksi ==
+
+opt User tap "Tandai Sudah Dijelajahi"
+  U -> BD : Tap tombol koleksi
+  BD -> HS : addToKoleksi(budayaId)
+  activate HS
+  HS -> HS : koleksiBox.add(budayaId)
+  HS --> BD : success
+  deactivate HS
+
+  BD -> DB : updateUserProgress(\n  userId, xp: +5)
+  activate DB
+  DB --> BD : updated
+  deactivate DB
+
+  BD --> U : Tampilkan animasi\n"Ditambahkan ke Koleksi!\n+5 XP"
+end
+
+deactivate BD
+
+@enduml

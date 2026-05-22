@@ -1,0 +1,100 @@
+@startuml seq_02_login
+' ============================================
+' SEQUENCE DIAGRAM — Login (Username & Password)
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — Login (Username & Password)**
+
+actor "Pengguna" as U
+participant "LoginScreen" as LS
+participant "AuthRepository" as AR
+participant "EncryptionService" as ES
+participant "HiveService\n(userBox)" as HS
+participant "SecureStorage" as SS
+participant "SessionManager" as SM
+
+== Proses Login ==
+
+U -> LS : Input username & password
+activate LS
+
+LS -> AR : login(username, password)
+activate AR
+
+AR -> HS : getUser(username)
+activate HS
+HS --> AR : userData / null
+deactivate HS
+
+alt #FFE0E0 User tidak ditemukan
+  AR --> LS : throw UserNotFoundException
+  LS --> U : "Username tidak ditemukan"
+else #E8F5E9 User ditemukan
+
+  == Verifikasi Password ==
+  AR -> SS : getSalt(userId)
+  activate SS
+  SS --> AR : salt
+  deactivate SS
+
+  AR -> ES : hashPassword(inputPassword, salt)
+  activate ES
+  ES --> AR : inputHash
+  deactivate ES
+
+  AR -> AR : bandingkan\ninputHash == storedHash
+
+  alt #FFE0E0 Password salah
+    AR --> LS : throw InvalidPasswordException
+    LS --> U : "Password salah"
+  else #E8F5E9 Password cocok
+
+    == Buat Session JWT ==
+    AR -> SM : createJWT(userId)
+    activate SM
+    SM --> AR : jwtToken (expiry 7 hari)
+    deactivate SM
+
+    AR -> ES : encryptAES(jwtToken)
+    activate ES
+    ES --> AR : encryptedToken
+    deactivate ES
+
+    AR -> SS : storeToken(encryptedToken)
+    activate SS
+    SS --> AR : success
+    deactivate SS
+
+    AR -> HS : updateLastActive(userId)
+    activate HS
+    HS --> AR : success
+    deactivate HS
+
+    AR --> LS : LoginResult.success(userData)
+  end
+end
+deactivate AR
+
+LS --> U : Navigasi ke HomeScreen
+
+opt Biometrik belum diaktifkan
+  LS --> U : Dialog "Aktifkan login biometrik?"
+  U -> LS : Setuju / Tolak
+end
+
+deactivate LS
+
+@enduml

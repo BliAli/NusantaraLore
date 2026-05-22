@@ -1,0 +1,62 @@
+@startuml
+title Activity Diagram - Login & Register
+
+start
+:Buka Aplikasi;
+
+if (Session JWT Valid?) then (ya)
+  :Masuk ke Home;
+  stop
+else (tidak)
+  :Tampilkan Login Screen;
+endif
+
+if (Punya Akun?) then (ya)
+  :Input Username & Password;
+  :Ambil data user dari Hive;
+
+  if (User ditemukan?) then (ya)
+    :Ambil salt dari SecureStorage;
+    :Hash password + salt (SHA-256);
+
+    if (Hash cocok?) then (ya)
+      :Buat session JWT;
+
+      if (Biometrik aktif?) then (belum)
+        if (Aktifkan biometrik?) then (ya)
+          :Scan sidik jari / Face ID;
+          :Input PIN cadangan 6 digit;
+          :Simpan PIN + set biometric=true;
+        else (tidak)
+        endif
+      else (sudah)
+      endif
+
+      :Navigasi ke Home;
+      stop
+    else (tidak)
+      :Error "Password salah";
+      stop
+    endif
+  else (tidak)
+    :Error "User tidak ditemukan";
+    stop
+  endif
+
+else (tidak)
+  :Input username & password baru;
+
+  if (Username tersedia?) then (ya)
+    :Generate salt;
+    :Hash password + salt (SHA-256);
+    :Simpan salt ke SecureStorage;
+    :Simpan user ke Hive;
+    :Buat session JWT;
+    :Navigasi ke Home;
+    stop
+  else (tidak)
+    :Error "Username sudah digunakan";
+    stop
+  endif
+endif
+@enduml

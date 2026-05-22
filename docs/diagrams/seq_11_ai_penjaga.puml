@@ -1,0 +1,142 @@
+@startuml seq_11_ai_penjaga
+' ============================================
+' SEQUENCE DIAGRAM — AI Penjaga (Ki Dalang)
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — AI Penjaga Ki Dalang (Gemini)**
+
+actor "Pengguna" as U
+participant "PenjagaScreen" as PS
+participant "GeminiRepository" as GR
+participant "Gemini API\n(gemini-1.5-flash)" as GA
+participant "DotEnv\n(.env)" as ENV
+
+== Inisialisasi Chat ==
+
+U -> PS : Buka tab "Penjaga"
+activate PS
+
+PS -> ENV : getString('GEMINI_API_KEY')
+activate ENV
+ENV --> PS : apiKey
+deactivate ENV
+
+PS -> GR : initSession(apiKey)
+activate GR
+
+GR -> GR : Set system prompt:\n"Kamu adalah Ki Dalang,\npenjaga budaya Nusantara\nyang bijaksana..."
+
+GR -> GR : chatHistory = []
+
+GR --> PS : session ready
+deactivate GR
+
+PS --> U : Tampilkan chat kosong\n+ pesan sapaan Ki Dalang:\n"Sugeng rawuh, Nak!\nAda yang ingin ditanyakan\ntentang budaya Nusantara?"
+
+== Tanya Jawab Budaya ==
+
+loop Percakapan berlangsung
+
+  U -> PS : Ketik pertanyaan\n(contoh: "Ceritakan tentang\nRoro Jonggrang")
+  activate PS
+
+  PS -> GR : sendMessage(\n  userMessage,\n  chatHistory\n)
+  activate GR
+
+  GR -> GR : Bangun prompt:\n1. System prompt (Ki Dalang)\n2. Chat history (max 10 pesan)\n3. User message terbaru
+
+  note right of GR
+    Context management:
+    - Max 10 pesan terakhir
+    - TIDAK kirim seluruh
+      database budaya
+    - Hanya konteks relevan
+  end note
+
+  GR -> GA : generateContent(\n  contents: prompt\n)
+  activate GA
+
+  alt #E8F5E9 API berhasil
+    GA --> GR : GenerateContentResponse\n(text response)
+    deactivate GA
+
+    GR -> GR : Tambah ke chatHistory:\n  user: userMessage\n  model: responseText
+
+    GR -> GR : Trim history jika > 10\n(hapus pesan terlama)
+
+    GR --> PS : responseText
+    deactivate GR
+
+    PS --> U : Tampilkan jawaban Ki Dalang\ndengan animasi typing
+
+  else #FFE0E0 API gagal / timeout
+    GA --> GR : Error / Timeout
+    GR --> PS : ErrorResult
+    PS --> U : "Maaf, Ki Dalang sedang\nbermeditasi. Coba lagi\nnanti, ya."
+
+  else #FFFDE7 Tidak ada internet
+    GR --> PS : NoConnectionError
+    PS --> U : "Tidak ada koneksi internet.\nKi Dalang membutuhkan\nkoneksi untuk menjawab."
+  end
+
+  deactivate PS
+
+end
+
+== Ceritakan Legenda (extend) ==
+
+opt User minta ceritakan legenda
+  U -> PS : "Ceritakan legenda\nMalin Kundang"
+  activate PS
+
+  PS -> GR : sendMessage(\n  "Ceritakan legenda\n  Malin Kundang secara\n  naratif dan dramatis",\n  history\n)
+  activate GR
+
+  GR -> GA : generateContent(prompt)
+  activate GA
+  GA --> GR : Narasi panjang legenda
+  deactivate GA
+
+  GR --> PS : narasiLegenda
+  deactivate GR
+
+  PS --> U : Tampilkan narasi dengan\nformat cerita (paragraf,\ndialog tokoh, dsb.)
+  deactivate PS
+end
+
+== Reset Sesi ==
+
+opt User mulai topik baru
+  U -> PS : Tap tombol "Reset Chat"
+  activate PS
+
+  PS --> U : Dialog "Reset percakapan?\nHistory chat akan dihapus."
+
+  U -> PS : Konfirmasi "Reset"
+
+  PS -> GR : resetSession()
+  activate GR
+  GR -> GR : chatHistory.clear()
+  GR --> PS : session reset
+  deactivate GR
+
+  PS --> U : Chat kosong + sapaan baru:\n"Nggih, mari mulai\nperbincangan baru!"
+  deactivate PS
+end
+
+deactivate PS
+
+@enduml

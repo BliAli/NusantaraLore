@@ -1,0 +1,29 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FEFCE8
+  BorderColor #92400E
+  ArrowColor #78350F
+}
+skinparam actor {
+  BorderColor #78350F
+}
+
+actor "Pengguna" as U
+actor "OpenStreetMap" as OSM
+actor "Sensor\nGyroscope" as SG
+
+rectangle "Peta Budaya (LBS)" {
+  usecase "UC-13\nLihat Peta Budaya" as UC13
+  usecase "UC-14\nBudaya Terdekat" as UC14
+  usecase "UC-15\nTilt Rotasi Peta" as UC15
+}
+
+U --> UC13
+U --> UC14
+OSM --> UC13
+OSM --> UC14
+UC13 <.. UC15 : <<extend>>
+SG --> UC15
+@enduml

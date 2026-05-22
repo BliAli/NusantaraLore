@@ -1,0 +1,26 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FEFCE8
+  BorderColor #92400E
+  ArrowColor #78350F
+}
+skinparam actor {
+  BorderColor #78350F
+}
+
+actor "Pengguna" as U
+actor "Google\nGemini AI" as AI
+
+rectangle "AI Penjaga (Ki Dalang)" {
+  usecase "UC-21\nTanya Jawab\nBudaya dengan AI" as UC21
+  usecase "UC-22\nCeritakan Legenda" as UC22
+  usecase "UC-23\nReset Sesi\nPercakapan" as UC23
+}
+
+U --> UC21
+AI --> UC21
+UC21 ..> UC23 : <<include>>
+UC21 <.. UC22 : <<extend>>
+@enduml

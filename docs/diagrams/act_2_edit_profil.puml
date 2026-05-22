@@ -1,0 +1,69 @@
+@startuml
+title Activity Diagram - Edit Profil
+
+start
+:Buka halaman Edit Profil;
+:Scan sidik jari / Face ID;
+
+if (Biometrik terverifikasi?) then (ya)
+  :Tampilkan form edit;
+else (tidak)
+  :Error "Verifikasi gagal";
+  stop
+endif
+
+switch (Pilih aksi)
+case ( Edit Username )
+  :Input username baru;
+
+  if (Username tersedia?) then (ya)
+    :Migrasi salt ke key baru;
+    :Simpan user dengan key baru di Hive;
+    :Verifikasi data tersimpan;
+    :Hapus data key lama;
+    :Migrasi data SQLite\n(user_progress, quiz_history,\nleaderboard);
+    :Refresh session JWT;
+    :SnackBar "Berhasil";
+    :Navigasi ke Profil;
+    stop
+  else (tidak)
+    :Error "Username sudah digunakan";
+    stop
+  endif
+
+case ( Edit Password )
+  :Input password lama & baru;
+  :Hash password lama + salt;
+
+  if (Hash cocok?) then (ya)
+    :Generate salt baru;
+    :Hash password baru + salt baru;
+    :Simpan salt baru ke SecureStorage;
+    :Update password di Hive;
+    :Refresh session JWT;
+    :SnackBar "Berhasil";
+    :Navigasi ke Profil;
+    stop
+  else (tidak)
+    :Error "Password lama salah";
+    stop
+  endif
+
+case ( Ubah Foto )
+  :Tampilkan bottom sheet;
+
+  switch (Pilihan)
+  case ( Kamera )
+    :Ambil foto dari kamera;
+  case ( Galeri )
+    :Pilih foto dari galeri;
+  case ( Hapus )
+    :Set foto = null;
+  endswitch
+
+  :Simpan ke Documents Directory;
+  :Update path foto di Hive;
+  :SnackBar "Foto berhasil diubah";
+  stop
+endswitch
+@enduml

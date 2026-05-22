@@ -1,0 +1,103 @@
+@startuml seq_12_konversi_mata_uang
+' ============================================
+' SEQUENCE DIAGRAM — Konversi Mata Uang
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — Konversi Mata Uang**
+
+actor "Pengguna" as U
+participant "CurrencyConverter\nScreen" as CC
+participant "HiveService\n(cacheBox)" as HS
+participant "Dio\n(HTTP Client)" as DIO
+participant "ExchangeRate\nAPI" as ERA
+
+== Buka Konverter ==
+
+U -> CC : Buka tab "Konverter"\n→ Mata Uang
+activate CC
+
+CC --> U : Tampilkan form:\n- Mata uang asal (default: IDR)\n- Mata uang tujuan\n- Input jumlah\nMata uang: IDR, USD, EUR,\nMYR, SGD
+
+== Input & Konversi ==
+
+U -> CC : Pilih mata uang &\ninput jumlah
+activate CC
+
+CC -> HS : getCachedRate(baseCurrency)
+activate HS
+HS --> CC : cachedData / null
+deactivate HS
+
+alt #E8F5E9 Cache valid (< 1 jam)
+  CC -> CC : Gunakan rate dari cache
+  note right of CC
+    TTL cache: 1 jam
+    Cek timestamp
+    cache vs waktu saat ini
+  end note
+
+else #FFFDE7 Cache expired atau kosong
+
+  CC -> DIO : GET https://api.\n  exchangerate-api.com/\n  v4/latest/{base}
+  activate DIO
+
+  DIO -> ERA : HTTP GET request
+  activate ERA
+
+  alt #E8F5E9 API berhasil (200 OK)
+    ERA --> DIO : JSON response:\n{\n  "rates": {\n    "USD": 0.000063,\n    "EUR": 0.000058,\n    ...\n  }\n}
+    deactivate ERA
+
+    DIO --> CC : Response data
+    deactivate DIO
+
+    CC -> CC : Parse exchange rates
+
+    CC -> HS : cacheRate({\n  rates: parsedRates,\n  timestamp: now()\n})
+    activate HS
+    HS --> CC : cached
+    deactivate HS
+
+  else #FFE0E0 API gagal / timeout
+    ERA --> DIO : Error / Timeout
+    DIO --> CC : Error
+
+    CC -> HS : getLastCachedRate()
+    activate HS
+
+    alt Ada cache lama
+      HS --> CC : lastCachedData\n+ timestamp
+      deactivate HS
+
+      CC --> U : Gunakan rate terakhir\n+ warning:\n"Data kurs terakhir\ndiperbarui [timestamp].\nTidak bisa mengambil\ndata terbaru."
+
+    else Tidak ada cache sama sekali
+      HS --> CC : null
+      CC --> U : "Tidak dapat mengambil\ndata kurs. Periksa\nkoneksi internet."
+    end
+  end
+end
+
+== Hitung & Tampilkan ==
+
+CC -> CC : result = amount × rate\n(fromCurrency → toCurrency)
+
+CC --> U : Tampilkan hasil konversi:\n"[amount] [from] =\n [result] [to]"\n+ keterangan:\n"Estimasi harga souvenir /\ntiket pertunjukan budaya"
+
+deactivate CC
+deactivate CC
+
+@enduml

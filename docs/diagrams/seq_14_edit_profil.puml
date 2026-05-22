@@ -1,0 +1,182 @@
+@startuml seq_14_edit_profil
+' ============================================
+' SEQUENCE DIAGRAM — Edit Profil (+ Biometric)
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — Edit Profil (Verifikasi Biometrik)**
+
+actor "Pengguna" as U
+participant "ProfileScreen" as PS
+participant "LocalAuth\n(Biometric)" as LA
+participant "AuthRepository" as AR
+participant "EncryptionService" as ES
+participant "HiveService\n(userBox)" as HS
+participant "SecureStorage" as SS
+participant "ImagePicker\n(Camera/Gallery)" as IP
+
+== Lihat Profil ==
+
+U -> PS : Buka tab "Profil"
+activate PS
+
+PS -> HS : getUserData(userId)
+activate HS
+HS --> PS : userData (username,\nphoto, level, xp, badges)
+deactivate HS
+
+PS -> HS : getBookmarkCount()
+activate HS
+HS --> PS : bookmarkCount
+deactivate HS
+
+PS -> HS : getKoleksiCount()
+activate HS
+HS --> PS : koleksiCount
+deactivate HS
+
+PS --> U : Tampilkan profil:\n- Foto profil\n- Username\n- Level & XP bar\n- Jumlah koleksi\n- Jumlah bookmark\n- Badges
+
+== Verifikasi Biometrik Sebelum Edit ==
+
+U -> PS : Tap "Edit Profil"
+activate PS
+
+PS -> LA : authenticate(\n  localizedReason:\n  "Verifikasi identitas\n  untuk edit profil"\n)
+activate LA
+
+alt #E8F5E9 Biometrik berhasil
+  LA --> PS : authenticated = true
+  deactivate LA
+
+  PS --> U : Tampilkan form edit:\n- Username\n- Password (opsional)\n- Foto profil
+
+  == Edit Username ==
+
+  opt User ubah username
+    U -> PS : Input username baru
+    activate PS
+
+    PS -> AR : checkUsernameAvailable(\n  newUsername)
+    activate AR
+    AR -> HS : getUser(newUsername)
+    activate HS
+    HS --> AR : null / existing
+    deactivate HS
+
+    alt Username tersedia
+      AR --> PS : available = true
+      deactivate AR
+
+      PS -> HS : updateUsername(\n  userId, newUsername)
+      activate HS
+      HS --> PS : updated
+      deactivate HS
+
+      PS --> U : "Username berhasil diubah"
+    else Username sudah dipakai
+      AR --> PS : available = false
+      PS --> U : "Username sudah digunakan"
+    end
+
+    deactivate PS
+  end
+
+  == Edit Password ==
+
+  opt User ubah password
+    U -> PS : Input password lama\n& password baru
+    activate PS
+
+    PS -> SS : getSalt(userId)
+    activate SS
+    SS --> PS : salt
+    deactivate SS
+
+    PS -> ES : hashPassword(oldPassword, salt)
+    activate ES
+    ES --> PS : oldHash
+    deactivate ES
+
+    PS -> HS : getStoredHash(userId)
+    activate HS
+    HS --> PS : storedHash
+    deactivate HS
+
+    alt #FFE0E0 Password lama salah
+      PS -> PS : oldHash != storedHash
+      PS --> U : "Password lama salah"
+    else #E8F5E9 Password lama benar
+      PS -> ES : generateSalt()
+      activate ES
+      ES --> PS : newSalt
+      deactivate ES
+
+      PS -> ES : hashPassword(\n  newPassword, newSalt)
+      activate ES
+      ES --> PS : newHash
+      deactivate ES
+
+      PS -> SS : storeSalt(userId, newSalt)
+      activate SS
+      SS --> PS : stored
+      deactivate SS
+
+      PS -> HS : updatePassword(\n  userId, newHash)
+      activate HS
+      HS --> PS : updated
+      deactivate HS
+
+      PS --> U : "Password berhasil diubah"
+    end
+
+    deactivate PS
+  end
+
+  == Ubah Foto Profil ==
+
+  opt User ubah foto
+    U -> PS : Tap foto profil
+    activate PS
+
+    PS --> U : Dialog:\n"Ambil dari Kamera"\n"Pilih dari Galeri"
+
+    U -> PS : Pilih sumber
+
+    PS -> IP : pickImage(source)
+    activate IP
+    IP --> PS : File imagePath
+    deactivate IP
+
+    PS -> PS : Compress & resize image
+
+    PS -> HS : updateProfilePhoto(\n  userId, imagePath)
+    activate HS
+    HS --> PS : updated
+    deactivate HS
+
+    PS --> U : Tampilkan foto baru\n"Foto profil diperbarui"
+    deactivate PS
+  end
+
+else #FFE0E0 Biometrik gagal
+  LA --> PS : authenticated = false
+  PS --> U : "Verifikasi gagal.\nSilakan coba lagi."
+end
+
+deactivate PS
+deactivate PS
+
+@enduml

@@ -5,6 +5,15 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+import java.util.Properties
+
+// Load signing properties if available (expects android/key.properties)
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
+}
+
 android {
     namespace = "com.example.nusantara_lore"
     compileSdk = flutter.compileSdkVersion
@@ -32,11 +41,19 @@ android {
         multiDexEnabled = true
     }
 
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties.getProperty("keyAlias") ?: "nusantara_lore_key"
+            keyPassword = keystoreProperties.getProperty("keyPassword") ?: "nusantara2026"
+            storeFile = file(keystoreProperties.getProperty("storeFile") ?: "app/keystore.jks")
+            storePassword = keystoreProperties.getProperty("storePassword") ?: "nusantara2026"
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Use release signing config if provided via android/key.properties
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }

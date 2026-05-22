@@ -1,0 +1,33 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FEFCE8
+  BorderColor #92400E
+  ArrowColor #78350F
+}
+skinparam actor {
+  BorderColor #78350F
+}
+
+actor "Pengguna" as U
+actor "Sensor\nAccelerometer" as SA
+
+rectangle "Eksplorasi Budaya" {
+  usecase "UC-08\nJelajah Legenda" as UC08
+  usecase "UC-09\nLihat Detail Budaya" as UC09
+  usecase "UC-10\nCari Budaya" as UC10
+  usecase "UC-11\nTambah Bookmark" as UC11
+  usecase "UC-12\nTambah Koleksi" as UC12
+  usecase "UC-39\nShake Discovery" as UC39
+}
+
+U --> UC08
+U --> UC09
+U --> UC10
+U --> UC11
+U --> UC12
+
+UC08 <.. UC39 : <<extend>>
+SA --> UC39
+@enduml

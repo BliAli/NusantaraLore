@@ -1,0 +1,143 @@
+@startuml seq_09_puzzle_batik
+' ============================================
+' SEQUENCE DIAGRAM — Puzzle Batik (Flame Engine)
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — Puzzle Batik (Flame Engine + Accelerometer)**
+
+actor "Pengguna" as U
+participant "PuzzleBatikScreen" as PB
+participant "FlameGame\n(PuzzleGame)" as FG
+participant "Accelerometer\n(sensors_plus)" as AC
+participant "SQLiteService" as DB
+participant "HiveService" as HS
+
+== Pilih Level & Motif ==
+
+U -> PB : Buka "Puzzle Batik"
+activate PB
+
+PB -> HS : getUnlockedBatik()
+activate HS
+HS --> PB : List<String> motifIds
+deactivate HS
+
+PB --> U : Tampilkan pilihan motif batik\n& level (3x3 / 4x4)
+
+U -> PB : Pilih motif & level
+activate PB
+
+== Inisialisasi Puzzle ==
+
+PB -> FG : initPuzzle(\n  imagePath: batik_image,\n  gridSize: 3x3 / 4x4\n)
+activate FG
+
+FG -> FG : Load gambar batik
+FG -> FG : Potong gambar menjadi\n9 tiles (3x3) atau\n16 tiles (4x4)
+FG -> FG : Shuffle posisi tiles\n(pastikan solvable)
+FG -> FG : Set timer & moveCount = 0
+
+FG --> PB : Game ready
+deactivate FG
+
+PB --> U : Tampilkan puzzle\ndengan tiles acak\n+ timer mulai berjalan
+
+== Mulai Sensor Accelerometer ==
+
+PB -> AC : accelerometerEvents.listen()
+activate AC
+note right of AC
+  Threshold shake:
+  magnitude > 15 m/s²
+  Debounce: 1 detik
+end note
+
+== Gameplay Loop ==
+
+loop Selama puzzle belum selesai
+
+  alt #E8F5E9 User drag tile
+    U -> PB : Drag tile ke posisi baru
+    PB -> FG : moveTile(fromIndex, toIndex)
+    activate FG
+
+    FG -> FG : Swap posisi tiles
+    FG -> FG : moveCount += 1
+    FG -> FG : Animasi slide tile
+
+    FG -> FG : checkComplete()
+
+    alt Puzzle selesai
+      FG --> PB : PuzzleState.completed(\n  time, moves)
+    else Belum selesai
+      FG --> PB : PuzzleState.playing
+    end
+    deactivate FG
+
+    PB --> U : Update tampilan puzzle
+
+  else #FFFDE7 Shake terdeteksi
+    AC -> PB : AccelerometerEvent\n(magnitude > 15)
+
+    PB -> PB : Cek debounce\n(> 1 detik dari shake terakhir)
+
+    alt Debounce valid
+      PB -> FG : reshuffleTiles()
+      activate FG
+      FG -> FG : Acak ulang posisi tiles\n(pastikan solvable)
+      FG --> PB : tiles reshuffled
+      deactivate FG
+
+      PB --> U : Animasi acak ulang\n"Puzzle di-shuffle!"
+    end
+  end
+
+end
+
+== Puzzle Selesai ==
+
+PB -> AC : cancelSubscription()
+deactivate AC
+
+PB -> PB : Hitung skor:\n  baseScore = 100\n  timeBonus = max(0, 60 - time)\n  movesPenalty = moves * 2\n  finalScore = base + bonus - penalty
+
+PB --> U : Tampilkan hasil:\n- Waktu penyelesaian\n- Jumlah gerakan\n- Skor akhir\n- XP didapat
+
+== Simpan Hasil & Reward ==
+
+PB -> DB : insert quiz_history({\n  quiz_type: 'puzzle_batik',\n  skor: finalScore\n})
+activate DB
+DB --> PB : saved
+deactivate DB
+
+PB -> DB : UPDATE user_progress\nSET total_xp += earnedXP
+activate DB
+DB --> PB : updated
+deactivate DB
+
+opt Motif baru terbuka
+  PB -> HS : unlockBatikMotif(newMotifId)
+  activate HS
+  HS --> PB : success
+  deactivate HS
+
+  PB --> U : "Motif baru terbuka!\n[Nama Motif]"
+end
+
+deactivate PB
+deactivate PB
+
+@enduml

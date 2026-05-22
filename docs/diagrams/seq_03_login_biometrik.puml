@@ -1,0 +1,136 @@
+@startuml seq_03_login_biometrik
+' ============================================
+' SEQUENCE DIAGRAM — Login Biometrik + PIN Fallback
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — Login Biometrik + PIN Fallback**
+
+actor "Pengguna" as U
+participant "LoginScreen" as LS
+participant "BiometricScreen" as BS
+participant "LocalAuth\n(Biometric)" as LA
+participant "AuthRepository" as AR
+participant "SecureStorage" as SS
+participant "SessionManager" as SM
+participant "EncryptionService" as ES
+
+== Cek Ketersediaan Biometrik ==
+
+U -> LS : Buka aplikasi
+activate LS
+
+LS -> LA : isDeviceSupported()
+activate LA
+LA --> LS : true / false
+deactivate LA
+
+alt #E8E8E8 Biometrik tidak tersedia
+  LS --> U : Tampilkan form login\nusername & password
+else #E8F5E9 Biometrik tersedia
+  LS -> LA : canCheckBiometrics()
+  activate LA
+  LA --> LS : true
+  deactivate LA
+
+  LS -> BS : Navigasi ke BiometricScreen
+  deactivate LS
+  activate BS
+
+  == Autentikasi Biometrik ==
+
+  BS -> LA : authenticate(\n  localizedReason:\n  "Scan sidik jari untuk masuk"\n)
+  activate LA
+
+  alt #E8F5E9 Biometrik berhasil
+    LA --> BS : AuthResult.success
+    deactivate LA
+
+    BS -> SS : getToken()
+    activate SS
+    SS --> BS : encryptedToken
+    deactivate SS
+
+    BS -> ES : decryptAES(encryptedToken)
+    activate ES
+    ES --> BS : jwtToken
+    deactivate ES
+
+    BS -> SM : validateJWT(jwtToken)
+    activate SM
+
+    alt JWT masih valid (< 7 hari)
+      SM --> BS : valid, userId
+      deactivate SM
+      BS --> U : Navigasi ke HomeScreen
+    else JWT expired
+      SM --> BS : expired
+      BS --> U : "Sesi habis, silakan\nlogin ulang"
+      BS -> LS : Navigasi ke LoginScreen
+    end
+
+  else #FFFDE7 Biometrik gagal (percobaan ke-1 / ke-2)
+    LA --> BS : AuthResult.failure
+    deactivate LA
+    BS --> U : "Coba lagi"\n(sisa percobaan: N)
+    note right of BS
+      Maksimal 3x percobaan
+      biometrik sebelum
+      fallback ke PIN
+    end note
+
+  else #FFE0E0 Biometrik gagal 3x → Fallback PIN
+    LA --> BS : AuthResult.failure (3x)
+
+    == Fallback: Input PIN 6 Digit ==
+
+    BS --> U : Tampilkan input PIN 6 digit
+    U -> BS : Input PIN
+    activate BS
+
+    BS -> SS : getEncryptedPIN()
+    activate SS
+    SS --> BS : encryptedPIN
+    deactivate SS
+
+    BS -> ES : decryptAES(encryptedPIN)
+    activate ES
+    ES --> BS : storedPIN
+    deactivate ES
+
+    BS -> BS : bandingkan\ninputPIN == storedPIN
+
+    alt #E8F5E9 PIN benar
+      BS -> SS : getToken()
+      activate SS
+      SS --> BS : encryptedToken
+      deactivate SS
+
+      BS -> SM : validateJWT(decrypt(token))
+      activate SM
+      SM --> BS : valid
+      deactivate SM
+
+      BS --> U : Navigasi ke HomeScreen
+    else #FFE0E0 PIN salah
+      BS --> U : "PIN salah, silakan\ncoba lagi"
+    end
+    deactivate BS
+  end
+
+  deactivate BS
+end
+
+@enduml

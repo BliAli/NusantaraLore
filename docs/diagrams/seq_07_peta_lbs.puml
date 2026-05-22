@@ -1,0 +1,144 @@
+@startuml seq_07_peta_lbs
+' ============================================
+' SEQUENCE DIAGRAM — Peta Budaya & LBS
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — Peta Budaya & Location Based Service**
+
+actor "Pengguna" as U
+participant "BudayaMapScreen" as BM
+participant "Geolocator" as GEO
+participant "BudayaRepository" as BR
+participant "SQLiteService" as DB
+participant "FlutterMap\n(OpenStreetMap)" as FM
+participant "Gyroscope\n(sensors_plus)" as GY
+
+== Inisialisasi Peta ==
+
+U -> BM : Buka tab "Peta Budaya"
+activate BM
+
+BM -> GEO : checkPermission()
+activate GEO
+GEO --> BM : LocationPermission status
+deactivate GEO
+
+alt #FFE0E0 Permission denied
+  BM -> GEO : requestPermission()
+  activate GEO
+  GEO --> BM : permission result
+  deactivate GEO
+
+  alt Permission tetap ditolak
+    BM --> U : Tampilkan UI fallback:\n"Browse berdasarkan Provinsi"
+    note right of BM
+      App TIDAK crash.
+      Tampilkan daftar provinsi
+      sebagai alternatif navigasi.
+    end note
+
+    U -> BM : Pilih provinsi
+    BM -> BR : getBudayaByProvinsi(provinsi)
+    activate BR
+    BR -> DB : query("...WHERE provinsi = ?")
+    activate DB
+    DB --> BR : List<BudayaModel>
+    deactivate DB
+    BR --> BM : List<BudayaModel>
+    deactivate BR
+    BM --> U : Tampilkan daftar budaya\ndari provinsi terpilih
+  end
+
+else #E8F5E9 Permission granted
+  == Ambil Lokasi User ==
+
+  BM -> GEO : getCurrentPosition(\n  accuracy: high\n)
+  activate GEO
+  GEO --> BM : Position(lat, lng)
+  deactivate GEO
+
+  == Cari Budaya Terdekat ==
+
+  BM -> BR : getBudayaTerdekat(\n  userLat, userLng,\n  limit: 10\n)
+  activate BR
+
+  BR -> DB : query("SELECT * FROM budaya\n  WHERE lat IS NOT NULL\n  AND lng IS NOT NULL")
+  activate DB
+  DB --> BR : List<BudayaModel>
+  deactivate DB
+
+  BR -> BR : Hitung jarak Haversine\nantara user dan setiap\nbudaya, sort ascending
+
+  note right of BR
+    Haversine Formula:
+    d = 2r × arcsin(√(
+      sin²(Δlat/2) +
+      cos(lat1) × cos(lat2) ×
+      sin²(Δlng/2)
+    ))
+  end note
+
+  BR -> BR : Ambil top 10 terdekat
+
+  BR --> BM : List<BudayaModel>\n(sorted by distance)
+  deactivate BR
+
+  == Render Peta ==
+
+  BM -> FM : initMap(\n  center: userPosition,\n  zoom: 10,\n  tileProvider: OpenStreetMap\n)
+  activate FM
+
+  BM -> FM : addMarker(userPosition,\n  icon: "Lokasi Anda")
+
+  loop Untuk setiap budaya terdekat
+    BM -> FM : addMarker(\n  budaya.lat, budaya.lng,\n  label: budaya.nama,\n  icon: wayangMarker\n)
+  end
+
+  FM --> BM : Map rendered
+  deactivate FM
+
+  BM --> U : Tampilkan peta dengan\nmarker budaya terdekat
+
+  == Interaksi Peta ==
+
+  opt User tap marker
+    U -> BM : Tap marker budaya
+    BM --> U : Tampilkan popup:\n- Nama budaya\n- Jarak dari user\n- Tombol "Lihat Detail"
+
+    opt User tap "Lihat Detail"
+      U -> BM : Tap "Lihat Detail"
+      BM --> U : Navigasi ke\nBudayaDetailScreen(id)
+    end
+  end
+
+  == Tilt Rotasi Peta (Gyroscope) ==
+
+  opt Sensor gyroscope aktif
+    GY -> BM : GyroscopeEvent(x, y, z)
+    activate BM
+    BM -> BM : Deteksi tilt\n(perubahan sumbu Y)
+    BM -> FM : rotateMap(angle)
+    activate FM
+    FM --> BM : map rotated
+    deactivate FM
+    BM --> U : Peta berputar\nmengikuti kemiringan HP
+    deactivate BM
+  end
+
+end
+deactivate BM
+
+@enduml

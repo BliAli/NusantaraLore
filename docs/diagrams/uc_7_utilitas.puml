@@ -1,0 +1,32 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FEFCE8
+  BorderColor #92400E
+  ArrowColor #78350F
+}
+skinparam actor {
+  BorderColor #78350F
+}
+
+actor "Pengguna" as U
+actor "ExchangeRate\nAPI" as ERA
+
+rectangle "Utilitas" {
+  usecase "UC-31\nKonversi Mata Uang" as UC31
+  usecase "UC-32\nKonversi Zona Waktu" as UC32
+}
+
+rectangle "Notifikasi" {
+  usecase "UC-36\nDaily Reminder" as UC36
+  usecase "UC-37\nNotifikasi\nAchievement" as UC37
+  usecase "UC-38\nAtur Pengingat" as UC38
+}
+
+U --> UC31
+U --> UC32
+U --> UC38
+ERA --> UC31
+UC38 <.. UC36 : <<extend>>
+@enduml

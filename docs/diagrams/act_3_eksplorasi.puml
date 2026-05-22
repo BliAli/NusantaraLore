@@ -1,0 +1,48 @@
+@startuml
+title Activity Diagram - Eksplorasi Budaya
+
+start
+:Masuk ke Home Screen;
+:Ambil lokasi GPS;
+:Query data budaya dari SQLite;
+:Hitung jarak Haversine tiap budaya;
+:Urutkan & tampilkan 10 terdekat;
+
+switch (Pilih menu)
+case ( Jelajah )
+  :Load data dari legenda.json;
+  :Tampilkan daftar legenda + gambar;
+  :Pilih salah satu legenda;
+  :Tampilkan detail\n(gambar, deskripsi, tokoh, asal);
+
+  fork
+    :Tap bookmark;
+    :Simpan ID ke Hive;
+  fork again
+    :Tap koleksi;
+    :Simpan ID ke Hive;
+    :Award XP;
+  end fork
+
+case ( Pencarian )
+  :Input kata kunci;
+  :Simpan ke riwayat Hive (max 10);
+  :Query SQLite LIKE '%keyword%';
+
+  if (Ada hasil?) then (ya)
+    :Tampilkan hasil per kategori;
+    :Tap hasil > buka detail;
+  else (tidak)
+    :Tampilkan empty state;
+  endif
+
+case ( Peta )
+  :Ambil lokasi GPS;
+  :Load data budaya dari SQLite;
+  :Tampilkan peta + marker;
+  :Tap marker > lihat info;
+  :Tap info > buka detail;
+endswitch
+
+stop
+@enduml

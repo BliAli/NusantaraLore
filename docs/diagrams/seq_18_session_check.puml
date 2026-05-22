@@ -1,0 +1,126 @@
+@startuml seq_18_session_check
+' ============================================
+' SEQUENCE DIAGRAM — Session Check (App Startup)
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — Session Check (App Startup / Splash)**
+
+actor "Pengguna" as U
+participant "SplashScreen" as SP
+participant "SessionManager" as SM
+participant "SecureStorage" as SS
+participant "EncryptionService" as ES
+participant "HiveService" as HS
+participant "NotificationService" as NS
+participant "GoRouter" as GR
+
+== App Launch ==
+
+U -> SP : Buka aplikasi NusantaraLore
+activate SP
+
+SP -> SP : Tampilkan splash screen\n(logo + loading animation)
+
+== Inisialisasi Services ==
+
+SP -> HS : initHive()
+activate HS
+HS --> SP : Hive boxes opened
+deactivate HS
+
+SP -> NS : initNotifications()
+activate NS
+NS --> SP : notifications ready
+deactivate NS
+
+== Cek Session ==
+
+SP -> SS : getToken()
+activate SS
+SS --> SP : encryptedToken / null
+deactivate SS
+
+alt #E8E8E8 Token tidak ada (belum pernah login)
+  SP -> GR : go('/login')
+  activate GR
+  GR --> U : Navigasi ke LoginScreen
+  deactivate GR
+
+else Token ditemukan
+  SP -> ES : decryptAES(encryptedToken)
+  activate ES
+  ES --> SP : jwtToken
+  deactivate ES
+
+  SP -> SM : validateJWT(jwtToken)
+  activate SM
+
+  SM -> SM : Decode JWT payload
+  SM -> SM : Cek expiry date
+
+  alt #E8F5E9 JWT valid (< 7 hari)
+    SM --> SP : JWTResult.valid(\n  userId, expiry)
+    deactivate SM
+
+    SP -> HS : getLastActive(userId)
+    activate HS
+    HS --> SP : lastActiveDate
+    deactivate HS
+
+    SP -> SP : Cek inactivity:\nnow() - lastActive > 7 hari?
+
+    alt #FFE0E0 Inactive > 7 hari (auto-logout)
+      SP -> SS : deleteToken()
+      activate SS
+      SS --> SP : deleted
+      deactivate SS
+
+      SP -> GR : go('/login')
+      activate GR
+      GR --> U : Navigasi ke LoginScreen\n"Sesi habis karena\ntidak aktif > 7 hari"
+      deactivate GR
+
+    else #E8F5E9 Masih aktif
+      SP -> HS : updateLastActive(\n  userId, now())
+      activate HS
+      HS --> SP : updated
+      deactivate HS
+
+      SP -> GR : go('/home')
+      activate GR
+      GR --> U : Navigasi ke HomeScreen\n(skip login)
+      deactivate GR
+    end
+
+  else #FFE0E0 JWT expired (> 7 hari)
+    SM --> SP : JWTResult.expired
+    deactivate SM
+
+    SP -> SS : deleteToken()
+    activate SS
+    SS --> SP : deleted
+    deactivate SS
+
+    SP -> GR : go('/login')
+    activate GR
+    GR --> U : Navigasi ke LoginScreen\n"Sesi login telah berakhir"
+    deactivate GR
+  end
+end
+
+deactivate SP
+
+@enduml

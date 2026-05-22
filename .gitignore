@@ -48,4 +48,8 @@ app.*.map.json
 .env
 *.env
 
+# Android signing (local files)
+/android/key.properties
+/android/app/keystore.jks
+
 resume.txt

@@ -1,0 +1,127 @@
+@startuml seq_15_notifikasi
+' ============================================
+' SEQUENCE DIAGRAM — Notifikasi Lokal
+' ============================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam sequence {
+  ArrowColor #78350F
+  ActorBorderColor #8B1A1A
+  LifeLineBorderColor #D4A017
+  LifeLineBackgroundColor #FDF6E3
+  ParticipantBorderColor #8B1A1A
+  ParticipantBackgroundColor #FDF6E3
+  ParticipantFontStyle bold
+  GroupBorderColor #D4A017
+}
+
+title **Sequence Diagram — Notifikasi Lokal**
+
+actor "Pengguna" as U
+participant "App\n(main.dart)" as APP
+participant "NotificationService" as NS
+participant "FlutterLocal\nNotifications" as FLN
+participant "SQLiteService" as DB
+participant "HiveService" as HS
+
+== Inisialisasi Notifikasi (App Startup) ==
+
+APP -> NS : initNotifications()
+activate NS
+
+NS -> FLN : initialize(\n  onSelectNotification:\n  handleNotifTap\n)
+activate FLN
+FLN --> NS : initialized
+deactivate FLN
+
+== Minta Permission ==
+
+NS -> FLN : requestPermissions()
+activate FLN
+
+alt #E8F5E9 User mengizinkan
+  FLN --> NS : granted = true
+  deactivate FLN
+
+  == Jadwalkan Daily Reminder (08:00) ==
+
+  NS -> DB : getRandomBudaya()
+  activate DB
+  DB --> NS : BudayaModel (random)
+  deactivate DB
+
+  NS -> FLN : zonedSchedule(\n  id: 1,\n  title: "Budaya Hari Ini",\n  body: "[nama budaya acak]",\n  scheduledDate: 08:00 daily,\n  matchDateTimeComponents:\n    DateTimeComponents.time\n)
+  activate FLN
+  FLN --> NS : scheduled
+  deactivate FLN
+
+  == Jadwalkan Quest Reminder (19:00) ==
+
+  NS -> FLN : zonedSchedule(\n  id: 2,\n  title: "Daily Quest",\n  body: "Kamu belum\n    menyelesaikan daily\n    quest hari ini!",\n  scheduledDate: 19:00 daily,\n  matchDateTimeComponents:\n    DateTimeComponents.time\n)
+  activate FLN
+  FLN --> NS : scheduled
+  deactivate FLN
+
+  note right of NS
+    Max 2 notifikasi/hari
+    untuk reminder.
+    Tidak spam user.
+  end note
+
+else #FFE0E0 User menolak
+  FLN --> NS : granted = false
+  NS --> APP : Notifikasi dinonaktifkan\n(app tetap berjalan normal)
+end
+
+NS --> APP : NotifService ready
+deactivate NS
+
+== Trigger: Achievement Notification ==
+
+note over APP : Dipanggil saat user\nmendapat achievement\n(level up, badge baru, dll)
+
+APP -> NS : showAchievementNotif(\n  type, data)
+activate NS
+
+alt Level Up
+  NS -> FLN : show(\n  id: 100,\n  title: "Level Up!",\n  body: "Selamat! Kamu naik\n    ke Level [X]!"\n)
+  activate FLN
+  FLN --> NS : shown
+  deactivate FLN
+
+else Badge Baru
+  NS -> FLN : show(\n  id: 101,\n  title: "Badge Baru!",\n  body: "Badge terbuka:\n    [nama badge]"\n)
+  activate FLN
+  FLN --> NS : shown
+  deactivate FLN
+end
+
+NS --> APP : notified
+deactivate NS
+
+== User Tap Notifikasi ==
+
+U -> FLN : Tap notifikasi di tray
+activate FLN
+
+FLN -> NS : onSelectNotification(\n  payload)
+activate NS
+
+alt Notif Budaya Hari Ini
+  NS -> APP : navigateTo(\n  '/home/explore/[budayaId]')
+  APP --> U : Buka BudayaDetailScreen
+
+else Notif Quest
+  NS -> APP : navigateTo(\n  '/home/games')
+  APP --> U : Buka GamesMenuScreen
+
+else Notif Achievement
+  NS -> APP : navigateTo(\n  '/home/profile')
+  APP --> U : Buka ProfileScreen\n(lihat pencapaian)
+end
+
+deactivate NS
+deactivate FLN
+
+@enduml
