@@ -8,6 +8,7 @@ import '../../../core/constants/app_routes.dart';
 import '../../../core/database/hive_service.dart';
 import '../../../core/security/session_manager.dart';
 import '../../../core/utils/gamification_service.dart';
+import '../../../shared/widgets/app_widgets.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_usecase.dart';
 
@@ -37,7 +38,6 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Reload every time this screen becomes visible
     _loadProfile();
   }
 
@@ -184,7 +184,7 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      'Dibuat dengan ❤️ untuk Tugas Akhir TPM',
+                      'Dibuat dengan semangat untuk Tugas Akhir TPM',
                       style: TextStyle(fontSize: 12, color: kColorTextLight),
                     ),
                   ],
@@ -202,37 +202,10 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
     required String title,
     required String content,
   }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: kColorSurface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kColorSecondary.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: kColorSecondary, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            content,
-            style: const TextStyle(height: 1.6, fontSize: 14),
-          ),
-        ],
-      ),
+    return NSectionCard(
+      title: title,
+      icon: icon,
+      child: Text(content, style: const TextStyle(height: 1.6, fontSize: 14)),
     );
   }
 
@@ -245,18 +218,10 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Container(
-              width: double.infinity,
+            NGradientBanner(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [kColorPrimary, Color(0xFFB22222)],
-                ),
-                borderRadius: BorderRadius.circular(16),
-              ),
               child: Column(
                 children: [
-                  // Profile photo or initial
                   Container(
                     width: 84,
                     height: 84,
@@ -355,35 +320,35 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
             const SizedBox(height: 16),
             Row(
               children: [
-                _buildStatCard('Koleksi', '$_koleksiCount'),
+                NStatCard(label: 'Koleksi', value: '$_koleksiCount'),
                 const SizedBox(width: 12),
-                _buildStatCard('Bookmark', '$_bookmarkCount'),
+                NStatCard(label: 'Bookmark', value: '$_bookmarkCount'),
                 const SizedBox(width: 12),
-                _buildStatCard('Level', '$_level'),
+                NStatCard(label: 'Level', value: '$_level'),
               ],
             ),
             const SizedBox(height: 24),
-            _buildMenuItem(
+            NMenuTile(
               icon: Icons.edit,
               label: 'Edit Profil',
               onTap: () => context.go(AppRoutes.editProfile),
             ),
-            _buildMenuItem(
+            NMenuTile(
               icon: Icons.currency_exchange,
               label: 'Konverter',
               onTap: () => context.go(AppRoutes.converter),
             ),
-            _buildMenuItem(
+            NMenuTile(
               icon: Icons.bookmark,
               label: 'Bookmark',
               onTap: () => context.go(AppRoutes.bookmark),
             ),
-            _buildMenuItem(
+            NMenuTile(
               icon: Icons.history,
               label: 'Riwayat Kuis',
               onTap: () => context.go(AppRoutes.quizHistory),
             ),
-            _buildMenuItem(
+            NMenuTile(
               icon: Icons.info_outline,
               label: 'Tentang Aplikasi',
               onTap: () {
@@ -396,7 +361,7 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                 );
               },
             ),
-            _buildMenuItem(
+            NMenuTile(
               icon: Icons.rate_review,
               label: 'Saran & Kesan TPM',
               onTap: () => _showSaranKesan(),
@@ -414,52 +379,6 @@ class _ProfileScreenState extends State<ProfileScreen> with RouteAware {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: Icon(icon, color: kColorPrimary),
-        title: Text(label),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
-      ),
-    );
-  }
-
-  Widget _buildStatCard(String label, String value) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: kColorSurface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: kColorSecondary.withValues(alpha: 0.3)),
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: kColorPrimary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 12, color: kColorTextLight),
             ),
           ],
         ),

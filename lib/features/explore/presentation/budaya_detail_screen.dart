@@ -137,7 +137,7 @@ class _BudayaDetailScreenState extends State<BudayaDetailScreen> {
                         Image.asset(
                           _budaya!['gambar'],
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
+                          errorBuilder: (_, error, stackTrace) => Container(
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 begin: Alignment.topCenter,

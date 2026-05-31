@@ -6,6 +6,7 @@ import '../../../core/constants/app_routes.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/database/sqlite_service.dart';
 import '../../../core/utils/location_utils.dart';
+import '../../../shared/widgets/app_widgets.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -88,15 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [kColorPrimary, Color(0xFFB22222)],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
+              NGradientBanner(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -132,25 +125,25 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 24),
               Row(
                 children: [
-                  _buildQuickAction(
+                  NQuickAction(
                     icon: Icons.map,
                     label: 'Peta',
                     onTap: () => context.go(AppRoutes.map),
                   ),
                   const SizedBox(width: 12),
-                  _buildQuickAction(
+                  NQuickAction(
                     icon: Icons.sports_esports,
                     label: 'Arena',
                     onTap: () => context.go(AppRoutes.games),
                   ),
                   const SizedBox(width: 12),
-                  _buildQuickAction(
+                  NQuickAction(
                     icon: Icons.auto_awesome,
                     label: 'Ki Dalang',
                     onTap: () => context.go(AppRoutes.penjaga),
                   ),
                   const SizedBox(width: 12),
-                  _buildQuickAction(
+                  NQuickAction(
                     icon: Icons.currency_exchange,
                     label: 'Konversi',
                     onTap: () => context.go(AppRoutes.converter),
@@ -167,93 +160,30 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              if (_isLoading)
-                const Center(child: CircularProgressIndicator())
-              else if (_nearbyBudaya.isEmpty)
-                _buildEmptyState()
-              else
-                ..._nearbyBudaya.map(_buildBudayaCard),
+              NAsyncView(
+                isLoading: _isLoading,
+                isEmpty: _nearbyBudaya.isEmpty,
+                emptyState: const NEmptyState(
+                  icon: Icons.explore_off,
+                  message: 'Belum ada data budaya.\nMulai jelajah untuk menemukan!',
+                ),
+                child: Column(
+                  children: _nearbyBudaya.map((b) {
+                    final distance = b['distance'] as double?;
+                    final sub = distance != null
+                        ? '${b['provinsi'] ?? ''} • ${LocationUtils.formatDistance(distance)}'
+                        : b['provinsi'] ?? '';
+                    return NBudayaCard(
+                      title: b['nama'] ?? '',
+                      subtitle: sub,
+                      onTap: () =>
+                          context.go(AppRoutes.budayaDetailPath(b['id'] ?? '')),
+                    );
+                  }).toList(),
+                ),
+              ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickAction({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: kColorSurface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: kColorSecondary.withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: kColorPrimary, size: 28),
-              const SizedBox(height: 4),
-              Text(label, style: const TextStyle(fontSize: 12)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBudayaCard(Map<String, dynamic> budaya) {
-    final distance = budaya['distance'] as double?;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(12),
-        leading: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: kColorPrimary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(Icons.temple_buddhist, color: kColorPrimary),
-        ),
-        title: Text(
-          budaya['nama'] ?? '',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          distance != null
-              ? '${budaya['provinsi'] ?? ''} • ${LocationUtils.formatDistance(distance)}'
-              : budaya['provinsi'] ?? '',
-        ),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () =>
-            context.go(AppRoutes.budayaDetailPath(budaya['id'] ?? '')),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          children: [
-            Icon(Icons.explore_off,
-                size: 64, color: kColorTextLight.withValues(alpha: 0.5)),
-            const SizedBox(height: 16),
-            const Text(
-              'Belum ada data budaya.\nMulai jelajah untuk menemukan!',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: kColorTextLight),
-            ),
-          ],
         ),
       ),
     );

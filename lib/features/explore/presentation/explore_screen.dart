@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../shared/widgets/app_widgets.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -114,106 +114,30 @@ class _ExploreScreenState extends State<ExploreScreen> {
             ),
           ),
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _filteredBudaya.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.search_off,
-                                size: 64,
-                                color:
-                                    kColorTextLight.withValues(alpha: 0.5)),
-                            const SizedBox(height: 16),
-                            const Text(AppStrings.noResults),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _filteredBudaya.length,
-                        itemBuilder: (context, index) {
-                          final item = _filteredBudaya[index];
-                          return _buildBudayaCard(item);
-                        },
-                      ),
+            child: NAsyncView(
+              isLoading: _isLoading,
+              isEmpty: _filteredBudaya.isEmpty,
+              emptyState: const NEmptyState(
+                icon: Icons.search_off,
+                message: AppStrings.noResults,
+              ),
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _filteredBudaya.length,
+                itemBuilder: (context, index) {
+                  final item = _filteredBudaya[index];
+                  return NBudayaCard(
+                    title: item['judul'] ?? item['nama'] ?? '',
+                    subtitle: item['asal'] ?? item['provinsi'] ?? '',
+                    imageAsset: item['gambar'],
+                    onTap: () =>
+                        context.go(AppRoutes.budayaDetailPath(item['id'] ?? '')),
+                  );
+                },
+              ),
+            ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildBudayaCard(dynamic item) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () =>
-            context.go(AppRoutes.budayaDetailPath(item['id'] ?? '')),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: kColorPrimary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: (item['gambar'] != null &&
-                        (item['gambar'] as String).isNotEmpty)
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(
-                          item['gambar'],
-                          width: 72,
-                          height: 72,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(
-                              Icons.auto_stories,
-                              color: kColorPrimary,
-                              size: 32),
-                        ),
-                      )
-                    : const Icon(Icons.auto_stories,
-                        color: kColorPrimary, size: 32),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item['judul'] ?? item['nama'] ?? '',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item['asal'] ?? item['provinsi'] ?? '',
-                      style: const TextStyle(
-                        color: kColorTextLight,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item['ringkasan'] ?? '',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right, color: kColorTextLight),
-            ],
-          ),
-        ),
       ),
     );
   }

@@ -104,7 +104,7 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
                                     width: 48,
                                     height: 48,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => const Icon(
+                                    errorBuilder: (_, error, stackTrace) => const Icon(
                                         Icons.auto_stories,
                                         color: kColorPrimary),
                                   ),
