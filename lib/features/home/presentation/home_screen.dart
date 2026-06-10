@@ -46,9 +46,15 @@ class _HomeScreenState extends State<HomeScreen> {
         withDistance.sort((a, b) =>
             (a['distance'] as double).compareTo(b['distance'] as double));
 
+        // Filter hanya budaya dalam radius 10 km
+        final nearby = withDistance
+            .where((b) => (b['distance'] as double) <= 10.0)
+            .take(10)
+            .toList();
+
         if (mounted) {
           setState(() {
-            _nearbyBudaya = withDistance.take(10).toList();
+            _nearbyBudaya = nearby;
             _isLoading = false;
           });
         }
@@ -165,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 isEmpty: _nearbyBudaya.isEmpty,
                 emptyState: const NEmptyState(
                   icon: Icons.explore_off,
-                  message: 'Belum ada data budaya.\nMulai jelajah untuk menemukan!',
+                  message: 'Tidak ada budaya dalam radius 10 km.\nCoba jelajahi peta untuk menemukan!',
                 ),
                 child: Column(
                   children: _nearbyBudaya.map((b) {
@@ -176,6 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     return NBudayaCard(
                       title: b['nama'] ?? '',
                       subtitle: sub,
+                      imageAsset: b['gambar_url'] as String?,
                       onTap: () =>
                           context.go(AppRoutes.budayaDetailPath(b['id'] ?? '')),
                     );

@@ -68,14 +68,14 @@ class _BudayaMapScreenState extends State<BudayaMapScreen> {
     if (_gyroEnabled) {
       _gyroSub = gyroscopeEventStream().listen((event) {
         setState(() {
-          _tiltX = event.y * 0.5;
-          _tiltY = event.x * 0.5;
+          _tiltX = event.y * 2.0;
+          _tiltY = event.x * 2.0;
         });
 
         if (_mapController != null &&
-            (_tiltX.abs() > 0.3 || _tiltY.abs() > 0.3)) {
+            (_tiltX.abs() > 0.1 || _tiltY.abs() > 0.1)) {
           _mapController!.moveCamera(
-            CameraUpdate.scrollBy(_tiltX * 3, _tiltY * 3),
+            CameraUpdate.scrollBy(_tiltX * 8, _tiltY * 8),
           );
         }
       });
@@ -134,36 +134,252 @@ class _BudayaMapScreenState extends State<BudayaMapScreen> {
   }
 
   void _showBudayaInfo(dynamic item) {
+    final gambar = item['gambar'] as String? ?? '';
+    final judul = item['judul'] ?? item['nama'] ?? '';
+    final asal = item['asal'] ?? item['provinsi'] ?? '';
+    final kategori = item['kategori'] as String? ?? '';
+    final ringkasan = item['ringkasan'] as String? ?? '';
+    final isiLengkap = item['isi_lengkap'] as String? ?? '';
+    final tokohList = item['tokoh'] as List<dynamic>? ?? [];
+    final tagsList = item['tags'] as List<dynamic>? ?? [];
+
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              item['judul'] ?? item['nama'] ?? '',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.55,
+        minChildSize: 0.3,
+        maxChildSize: 0.9,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: kColorBackground,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: ListView(
+            controller: scrollController,
+            padding: EdgeInsets.zero,
+            children: [
+              // ── Handle bar ──
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 8),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade400,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              item['asal'] ?? item['provinsi'] ?? '',
-              style: const TextStyle(color: kColorTextLight),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              item['ringkasan'] ?? '',
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+
+              // ── Hero Image ──
+              if (gambar.isNotEmpty)
+                Container(
+                  height: 200,
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.asset(
+                          gambar,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: kColorPrimary.withValues(alpha: 0.1),
+                            child: const Icon(
+                              Icons.auto_stories,
+                              size: 64,
+                              color: kColorPrimary,
+                            ),
+                          ),
+                        ),
+                        // Gradient overlay di bawah
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            height: 80,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.6),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Kategori badge di gambar
+                        if (kategori.isNotEmpty)
+                          Positioned(
+                            top: 12,
+                            right: 12,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: kColorAccent.withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                kategori[0].toUpperCase() +
+                                    kategori.substring(1),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+
+              // ── Title & Origin ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: Text(
+                  judul,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: kColorText,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.location_on,
+                        size: 16, color: kColorTextLight),
+                    const SizedBox(width: 4),
+                    Text(
+                      asal,
+                      style: const TextStyle(
+                        color: kColorTextLight,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // ── Tokoh ──
+              if (tokohList.isNotEmpty) ...[
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Text(
+                    'Tokoh',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: kColorText,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: tokohList
+                        .map((t) => Chip(
+                              avatar: const CircleAvatar(
+                                backgroundColor: kColorPrimary,
+                                child: Icon(Icons.person,
+                                    size: 14, color: Colors.white),
+                              ),
+                              label: Text(t.toString(),
+                                  style: const TextStyle(fontSize: 12)),
+                              backgroundColor:
+                                  kColorPrimary.withValues(alpha: 0.08),
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            ))
+                        .toList(),
+                  ),
+                ),
+              ],
+
+              // ── Divider ──
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Divider(height: 1),
+              ),
+
+              // ── Ringkasan ──
+              if (ringkasan.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Text(
+                    ringkasan,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
+                      color: kColorTextLight,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+
+              // ── Isi Lengkap ──
+              if (isiLengkap.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                  child: Text(
+                    isiLengkap,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: kColorText,
+                      height: 1.6,
+                    ),
+                  ),
+                ),
+
+              // ── Tags ──
+              if (tagsList.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: tagsList
+                        .map((tag) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: kColorSecondary.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '#${tag.toString()}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: kColorText,
+                                ),
+                              ),
+                            ))
+                        .toList(),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -218,11 +434,14 @@ class _BudayaMapScreenState extends State<BudayaMapScreen> {
                       const Icon(Icons.screen_rotation,
                           color: Colors.white, size: 16),
                       const SizedBox(width: 8),
-                      Text(
-                        'Gyroscope aktif — miringkan HP untuk geser peta '
-                        '(X: ${_tiltX.toStringAsFixed(1)}, Y: ${_tiltY.toStringAsFixed(1)})',
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 12),
+                      Flexible(
+                        child: Text(
+                          'Gyroscope aktif — miringkan HP untuk geser peta '
+                          '(X: ${_tiltX.toStringAsFixed(1)}, Y: ${_tiltY.toStringAsFixed(1)})',
+                          style:
+                              const TextStyle(color: Colors.white, fontSize: 12),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),

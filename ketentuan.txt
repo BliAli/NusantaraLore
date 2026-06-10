@@ -1,0 +1,141 @@
+Terdapat login dengan enkripsi (tidak menggunakan firebase) dan session
+Memiliki login biometric
+Terkoneksi database / penyimpanan (SQLite, Hive, dll)
+Terdapat web service / API boleh sampai pemanfaatan IoT, games atau multiplatform (Android, iOS) serta memiliki fasilitas LBS yang terkait tema
+Terdapat menu buttom navigation: menu profil (ada gambar) dan menu saran dan kesan mata kuliah TPM dan menu logout
+Memiliki menu tambahan konversi mata uang (min. 3 mata uang) dan konversi waktu (minimal ada: WIB, WIT, WITA, London) yang terpadukan dengan konsep
+Memiliki fitur minimal 2 sensor (Accelerometer, Gyroscope, dll) sesuai konsep
+Memiliki fitur/fasilitas AI/ML dan LLM sesuai dengan konsep tema
+Memiliki fitur mini games sederhana terkait dengan konsep
+Memiliki fasilitas pencarian dan pemilihan serta notifikasi sesuai dengan konsep
+
+1. Login dengan enkripsi (tidak menggunakan firebase) dan session
+
+  - Kriteria: Harus ada login, password dienkripsi, tidak pakai Firebase (pakai database lokal/lainnya), dan pakai manajemen sesi (session).
+  - File yang Terlibat:
+    - lib/core/security/encryption_service.dart (Logika hashing SHA-256 dan AES-256)
+    - lib/core/security/session_manager.dart (Logika pembuatan dan validasi token JWT)
+    - lib/core/database/hive_service.dart (Penyimpanan data user)
+    - lib/features/auth/presentation/register_screen.dart (UI Daftar)
+    - lib/features/auth/presentation/login_screen.dart (UI Masuk)
+  - Alur (Flow):
+    a. Register: User memasukkan username dan password di RegisterScreen. Sistem membuat salt acak, menggabungkan password dengan salt, lalu melakukan hashing
+  menggunakan SHA-256 (EncryptionService.hashPassword). Data user dan password yang sudah di-hash disimpan di Hive (userBox). Salt disimpan aman di
+  FlutterSecureStorage.
+    b. Login: User memasukkan username dan password di LoginScreen. Sistem mengambil salt dari storage, mem-hashing password input, lalu mencocokkannya dengan
+  hash di Hive.
+    c. Session: Jika login berhasil, SessionManager.createSession dipanggil. Sistem membuat sebuah JWT (JSON Web Token) tiruan yang berisi data user dan waktu
+  kedaluwarsa (7 hari), lalu menyimpannya di FlutterSecureStorage.
+
+  2. Memiliki login biometric
+
+  - Kriteria: Login menggunakan sidik jari/wajah.
+  - File yang Terlibat:
+    - lib/features/auth/presentation/biometric_screen.dart (UI dan logika local_auth)
+    - lib/features/auth/presentation/login_screen.dart (Dialog penawaran biometrik)
+    - lib/features/auth/presentation/splash_screen.dart (Routing awal)
+  - Alur (Flow):
+    a. Aktivasi: Setelah login sukses pertama kali, muncul dialog di LoginScreen menanyakan apakah user mau mengaktifkan biometrik. Jika "Ya", sistem
+  memverifikasi sidik jari, lalu meminta user membuat PIN 6 digit cadangan.
+    b. Login Selanjutnya: Saat membuka app, SplashScreen melihat sesi masih valid dan biometrik aktif, lalu melempar user ke BiometricScreen.
+    c. Fallback: Jika sensor sidik jari gagal 3 kali, layar otomatis memunculkan input PIN 6 digit yang dikonfirmasi menggunakan hashing (pin_salt).
+
+  3. Terkoneksi database / penyimpanan (SQLite, Hive, dll)
+
+  - Kriteria: Penyimpanan lokal terstruktur.
+  - File yang Terlibat:
+    - lib/core/database/sqlite_service.dart (Database relasional SQL)
+    - lib/core/database/hive_service.dart (Database NoSQL Key-Value)
+  - Implementasi:
+    - Hive: Digunakan untuk menyimpan data cepat dan sederhana: data kredensial user, state session, cache API, daftar bookmark, riwayat pencarian, dan tracker
+  koleksi.
+    - SQLite: Digunakan untuk menyimpan data kompleks yang butuh di-query: tabel budaya (untuk pencarian LIKE multi-kolom), tabel user_progress (XP, level), tabel
+  quiz_history, dan tabel leaderboard.
+
+  4. Terdapat web service / API serta memiliki fasilitas LBS
+
+  - Kriteria: Memanggil API eksternal dan Location Based Service (Peta/GPS).
+  - File yang Terlibat:
+    - lib/core/network/api_client.dart (Memanggil API pakai dio)
+    - lib/features/converter/presentation/currency_converter.dart (Memanggil API Exchange Rate)
+    - lib/features/explore/presentation/budaya_map_screen.dart (LBS dengan Google Maps)
+    - lib/features/home/presentation/home_screen.dart (LBS untuk budaya terdekat)
+    - lib/core/utils/location_utils.dart (Geolocator untuk ambil GPS)
+  - Alur (Flow):
+    - API: Fitur konversi mata uang menembak v6.exchangerate-api.com untuk mendapatkan kurs live. Hasilnya di-cache.
+    - LBS Map: Layar BudayaMapScreen menampilkan Google Maps dengan marker lokasi-lokasi legenda (menggunakan koordinat lat/lng dari database JSON).
+    - LBS Terdekat: Layar HomeScreen mengambil lokasi GPS device saat ini, lalu menghitung jarak ke setiap lokasi budaya pakai rumus Haversine (di LocationUtils),
+  lalu menyortir "Budaya Terdekat".
+
+  5. Menu bottom navigation (Profil bergambar, Saran Kesan, Logout)
+
+  - Kriteria: Navigasi bawah dengan 5 menu, termasuk layar profil lengkap.
+  - File yang Terlibat:
+    - lib/app.dart (Implementasi NavigationBar dan GoRouter ShellRoute)
+    - lib/features/profile/presentation/profile_screen.dart (UI Profil)
+  - Implementasi:
+    - Aplikasi punya 5 tab di bawah: Beranda, Jelajah, Arena, Penjaga, Profil.
+    - Di ProfileScreen, terdapat Avatar bergambar (menggunakan inisial huruf dari username).
+    - Terdapat tombol Saran & Kesan TPM yang jika diklik akan memunculkan Bottom Sheet berisi review mata kuliah.
+    - Terdapat tombol Keluar (Logout) yang memanggil SessionManager.clearSession().
+
+  6. Konversi mata uang (min 3) dan waktu (WIB, WIT, WITA, London)
+
+  - Kriteria: Konversi live untuk uang dan zona waktu.
+  - File yang Terlibat:
+    - lib/features/converter/presentation/converter_screen.dart (Tab parent)
+    - lib/features/converter/presentation/currency_converter.dart (Tab Uang)
+    - lib/features/converter/presentation/timezone_converter.dart (Tab Waktu)
+  - Implementasi:
+    - Uang: Mendukung konversi 5 mata uang (IDR, USD, EUR, MYR, SGD) untuk keperluan "Cek harga tiket/oleh-oleh". Ada fitur offline fallback rate jika tidak ada
+  internet.
+    - Waktu: User memasukkan jam lokal, lalu otomatis dikonversi ke 5 zona waktu: WIB (Jakarta), WITA (Makassar), WIT (Jayapura), GMT (London), dan JST (Tokyo)
+  untuk "Jadwal festival budaya".
+
+  7. Memiliki fitur minimal 2 sensor (Accelerometer, Gyroscope)
+
+  - Kriteria: Integrasi hardware sensor.
+  - File yang Terlibat:
+    - lib/features/games/presentation/puzzle_batik_screen.dart (Accelerometer)
+    - lib/features/explore/presentation/budaya_map_screen.dart (Gyroscope)
+  - Implementasi:
+    - Accelerometer (Kocok/Shake): Di dalam game Puzzle Batik, jika sistem mendeteksi magnitudo getaran (event.x, event.y, event.z) lebih dari angka 15, papan
+  puzzle akan diacak ulang secara otomatis.
+    - Gyroscope (Miring/Tilt): Di dalam Peta Budaya, terdapat tombol toggle Gyroscope. Jika aktif, memiringkan handphone akan menggerakkan (panning) posisi kamera
+  Google Maps di layar.
+
+  8. Memiliki fasilitas AI/ML dan LLM
+
+  - Kriteria: Integrasi kecerdasan buatan.
+  - File yang Terlibat:
+    - lib/features/ai_penjaga/data/gemini_repository.dart (Koneksi ke SDK Gemini)
+    - lib/features/ai_penjaga/presentation/penjaga_screen.dart (UI Chat)
+  - Implementasi: Menggunakan API google_generative_ai (Gemini 2.5 Flash). Di-inject dengan instruksi sistem (System Prompt) agar bertindak sebagai "Ki Dalang",
+  yang menjawab pertanyaan pengguna seputar budaya Nusantara menggunakan bahasa Indonesia bercampur sapaan Jawa halus.
+
+  9. Memiliki fitur mini games terkait konsep
+
+  - Kriteria: Minimal 2 game interaktif.
+  - File yang Terlibat:
+    - lib/features/games/presentation/kuis_mitos_screen.dart
+    - lib/features/games/presentation/tebak_wayang_screen.dart
+    - lib/features/games/presentation/puzzle_batik_screen.dart
+  - Implementasi: Terdapat 3 game.
+    - Kuis Mitos vs Fakta: Menampilkan klaim tentang cerita rakyat, timer 30 detik.
+    - Tebak Wayang: Menampilkan ikon siluet (karena aset gambar tidak ada, diganti ikon), memilih 4 opsi nama tokoh, timer 20 detik.
+    - Puzzle Batik: Drag-and-drop menyusun 9 kotak warna sesuai urutan.
+    - Setiap game yang selesai akan memberikan XP yang dicatat oleh GamificationService dan dihitung ke dalam level serta Leaderboard.
+
+  10. Pencarian, pemilihan, notifikasi sesuai konsep
+
+  - Kriteria: Adanya fitur Search, Filter, Bookmark, dan Notifikasi.
+  - File yang Terlibat:
+    - lib/features/search/presentation/search_screen.dart (Search)
+    - lib/features/explore/presentation/explore_screen.dart (Pemilihan/Filter)
+    - lib/features/profile/presentation/bookmark_screen.dart (Bookmark)
+    - lib/core/utils/notification_service.dart (Notifikasi)
+  - Implementasi:
+    - Pencarian: Menggunakan query SQL LIKE yang mencari ke beberapa kolom sekaligus (nama, provinsi, deskripsi, tag) di database SQLite.
+    - Pemilihan (Filter): Di layar Jelajah, pengguna bisa memilih kategori melalui FilterChip (Legenda, Tradisi, Kuliner, dll).
+    - Notifikasi: Menggunakan flutter_local_notifications. Terdapat jadwal otomatis (Daily Quest jam 08:00 & 19:00), serta notifikasi Achievement langsung yang
+  muncul saat user naik level atau mencapai target tertentu (misal: pertama kali mendapat 100 XP).

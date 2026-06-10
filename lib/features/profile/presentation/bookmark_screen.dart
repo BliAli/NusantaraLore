@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../core/database/hive_service.dart';
+import '../../../shared/widgets/app_widgets.dart';
+import '../../../shared/widgets/app_widgets.dart';
 
 class BookmarkScreen extends StatefulWidget {
   const BookmarkScreen({super.key});
@@ -61,70 +63,28 @@ class _BookmarkScreenState extends State<BookmarkScreen> {
     return Scaffold(
       backgroundColor: kColorBackground,
       appBar: AppBar(title: const Text('Bookmark')),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _bookmarked.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.bookmark_border,
-                          size: 64,
-                          color: kColorTextLight.withValues(alpha: 0.5)),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Belum ada bookmark.\nTambahkan dari halaman detail budaya.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: kColorTextLight),
-                      ),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _bookmarked.length,
-                  itemBuilder: (context, index) {
-                    final item = _bookmarked[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: kColorPrimary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: (item['gambar'] != null &&
-                                  (item['gambar'] as String).isNotEmpty)
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.asset(
-                                    item['gambar'],
-                                    width: 48,
-                                    height: 48,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, error, stackTrace) => const Icon(
-                                        Icons.auto_stories,
-                                        color: kColorPrimary),
-                                  ),
-                                )
-                              : const Icon(Icons.auto_stories,
-                                  color: kColorPrimary),
-                        ),
-                        title: Text(
-                          item['judul'] ?? item['nama'] ?? '',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle:
-                            Text(item['asal'] ?? item['provinsi'] ?? ''),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () => context
-                            .go(AppRoutes.budayaDetailPath(item['id'] ?? '')),
-                      ),
-                    );
-                  },
-                ),
+      body: NAsyncView(
+        isLoading: _isLoading,
+        isEmpty: _bookmarked.isEmpty,
+        emptyState: const NEmptyState(
+          icon: Icons.bookmark_border,
+          message: 'Belum ada bookmark.\nTambahkan dari halaman detail budaya.',
+        ),
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: _bookmarked.length,
+          itemBuilder: (context, index) {
+            final item = _bookmarked[index];
+            return NBudayaCard(
+              title: item['judul'] ?? item['nama'] ?? '',
+              subtitle: item['asal'] ?? item['provinsi'] ?? '',
+              imageAsset: item['gambar'],
+              onTap: () =>
+                  context.go(AppRoutes.budayaDetailPath(item['id'] ?? '')),
+            );
+          },
+        ),
+      ),
     );
   }
 }

@@ -6,6 +6,7 @@ import '../../../core/constants/app_routes.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/database/hive_service.dart';
 import '../../../core/database/sqlite_service.dart';
+import '../../../shared/widgets/app_widgets.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -94,23 +95,25 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _searchController.text.isEmpty
-              ? _buildHistory()
-              : _results.isEmpty
-                  ? _buildEmpty()
-                  : _buildResults(),
+      body: NAsyncView(
+        isLoading: _isLoading,
+        isEmpty: _searchController.text.isNotEmpty && _results.isEmpty,
+        emptyState: const NEmptyState(
+          icon: Icons.search_off,
+          message: AppStrings.noResults,
+        ),
+        child: _searchController.text.isEmpty
+            ? _buildHistory()
+            : _buildResults(),
+      ),
     );
   }
 
   Widget _buildHistory() {
     if (_searchHistory.isEmpty) {
-      return const Center(
-        child: Text(
-          'Cari legenda, tradisi, atau tokoh budaya',
-          style: TextStyle(color: kColorTextLight),
-        ),
+      return const NEmptyState(
+        icon: Icons.search,
+        message: 'Cari legenda, tradisi, atau tokoh budaya',
       );
     }
 
@@ -131,25 +134,6 @@ class _SearchScreenState extends State<SearchScreen> {
               },
             )),
       ],
-    );
-  }
-
-  Widget _buildEmpty() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.search_off, size: 64,
-              color: kColorTextLight.withValues(alpha: 0.5)),
-          const SizedBox(height: 16),
-          const Text(AppStrings.noResults),
-          const SizedBox(height: 8),
-          const Text(
-            AppStrings.popularContent,
-            style: TextStyle(color: kColorTextLight),
-          ),
-        ],
-      ),
     );
   }
 
@@ -178,15 +162,11 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          ...entry.value.map((item) => Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  title: Text(item['nama'] ?? ''),
-                  subtitle: Text(item['provinsi'] ?? ''),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context
-                      .go(AppRoutes.budayaDetailPath(item['id'] ?? '')),
-                ),
+          ...entry.value.map((item) => NBudayaCard(
+                title: item['nama'] ?? '',
+                subtitle: item['provinsi'] ?? '',
+                onTap: () => context
+                    .go(AppRoutes.budayaDetailPath(item['id'] ?? '')),
               )),
           const SizedBox(height: 12),
         ],

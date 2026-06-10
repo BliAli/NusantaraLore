@@ -25,7 +25,7 @@ class AppStrings {
   static const navProfile = 'Profil';
 
   // Explore
-  static const nearbyBudaya = 'Budaya Terdekat';
+  static const nearbyBudaya = 'Budaya Terdekat (10 km)';
   static const allBudaya = 'Semua Budaya';
   static const searchHint = 'Cari legenda, tradisi, artefak...';
   static const noResults = 'Tidak ada hasil ditemukan';

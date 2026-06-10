@@ -5,9 +5,11 @@ import 'package:local_auth/local_auth.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/constants/app_styles.dart';
 import '../../../core/security/encryption_service.dart';
 import '../../../core/security/session_manager.dart';
 import '../../../core/database/hive_service.dart';
+import '../../../shared/widgets/app_widgets.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -79,9 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: kColorError),
-    );
+    showErrorSnackBar(context, message);
   }
 
   Future<void> _offerBiometric() async {
@@ -213,20 +213,15 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.temple_buddhist,
+                  const Icon(Icons.temple_buddhist,
                       size: 80, color: kColorPrimary),
                   const SizedBox(height: 16),
-                  Text(
+                  const Text(
                     AppStrings.appName,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: kColorPrimary,
-                      fontFamily: 'CinzelDecorative',
-                    ),
+                    style: AppStyles.brandTitle,
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  const Text(
                     AppStrings.tagline,
                     style: TextStyle(
                       fontSize: 14,
@@ -263,21 +258,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         v == null || v.isEmpty ? 'Wajib diisi' : null,
                   ),
                   const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _login,
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text(AppStrings.login),
-                    ),
+                  NLoadingButton(
+                    isLoading: _isLoading,
+                    label: AppStrings.login,
+                    onPressed: _login,
                   ),
                   const SizedBox(height: 16),
                   TextButton(

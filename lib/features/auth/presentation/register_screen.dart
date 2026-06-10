@@ -7,6 +7,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/security/encryption_service.dart';
 import '../../../core/security/session_manager.dart';
 import '../../../core/database/hive_service.dart';
+import '../../../shared/widgets/app_widgets.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -62,12 +63,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       await SessionManager.createSession(username, username);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(AppStrings.registerSuccess),
-            backgroundColor: kColorSuccess,
-          ),
-        );
+        showSuccessSnackBar(context, AppStrings.registerSuccess);
         context.go(AppRoutes.home);
       }
     } catch (e) {
@@ -79,9 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: kColorError),
-    );
+    showErrorSnackBar(context, message);
   }
 
   @override
@@ -154,21 +148,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   ),
                   const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _register,
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text(AppStrings.register),
-                    ),
+                  NLoadingButton(
+                    isLoading: _isLoading,
+                    label: AppStrings.register,
+                    onPressed: _register,
                   ),
                   const SizedBox(height: 16),
                   TextButton(
